@@ -1,0 +1,31 @@
+#!/bin/bash
+# Lints staged PHP files with Pint + PHPStan.
+# Enable once per checkout: git config core.hooksPath .githooks
+set -euo pipefail
+
+REPO_DIR="$(git rev-parse --show-toplevel)"
+cd "$REPO_DIR"
+
+mapfile -t staged < <(git diff --cached --name-only --diff-filter=ACM -- '*.php')
+[[ ${#staged[@]} -eq 0 ]] && exit 0
+
+if ! docker compose exec -T app true >/dev/null 2>&1; then
+    echo "pre-commit: 'app' container is not running — skipping PHP lint."
+    echo "  Start it with: docker compose up -d"
+    exit 0
+fi
+
+status=0
+
+echo "pre-commit: pint --test ${staged[*]}"
+if ! docker compose exec -T app ./vendor/bin/pint --test "${staged[@]}"; then
+    echo "  Formatting differs — run: docker compose exec app composer format"
+    status=1
+fi
+
+echo "pre-commit: phpstan analyse ${staged[*]}"
+if ! docker compose exec -T app ./vendor/bin/phpstan analyse --memory-limit=-1 "${staged[@]}"; then
+    status=1
+fi
+
+exit "$status"
