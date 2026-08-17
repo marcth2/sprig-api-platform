@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-17
+
+Patch release fixing two issues found in review of v0.1.0.
+
+### Fixed
+
+- `VERSION` is now truly the sole source of truth for `APP_VERSION`/`API_VERSION`. A stray
+  `API_VERSION=1.0.0` line in `.env.example` meant `cp .env.example .env` permanently pinned
+  `API_VERSION`, since Dotenv's immutable loader never overrides an already-set var — silently
+  overriding the value `VERSION` was supposed to control. The line is removed, `config/app.php`
+  now loads `VERSION` via `Dotenv::create(Env::getRepository(), ...)` (reusing the same
+  repository/adapter chain as Laravel's own `.env` loader), and a `'version'` key backed by
+  `APP_VERSION` was added to `config/app.php`'s returned array.
+- `.github/workflows/ci.yml` now sources its ephemeral CI database credentials from the
+  `CI_DB_PASSWORD`/`CI_DB_ROOT_PASSWORD` repo secrets instead of hardcoded `password`/`root`
+  values, restoring the reference prototype's convention.
+
 ## [0.1.0] - 2026-08-17
 
 First tagged release. Phase one: a from-scratch rebuild of the HealthCheck domain and engineering
