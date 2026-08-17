@@ -1,4 +1,4 @@
-# CLAUDE.md — Sprout API Platform
+# CLAUDE.md — Sprig API Platform
 
 Agentic project instructions for Claude Code. Read this file before making any changes.
 
@@ -16,7 +16,7 @@ Both are written to be readable by Product Owners and AI agents. `app/{Domain}/A
 
 ## Project Purpose
 
-Sprout API Platform — a Laravel platform that starts as a polished, reusable template and becomes the home for migrated services over time.
+Sprig API Platform — a Laravel platform that starts as a polished, reusable template and becomes the home for migrated services over time.
 
 Phase one: reimplementing the HealthCheck domain and engineering conventions of a reference prototype under this branding and a simplified trunk-based git workflow. Future domains arrive alongside future migrated services and are out of scope for now.
 

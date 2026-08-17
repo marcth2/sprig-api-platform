@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "marcth2/laravel-platform",
     "type": "project",
-    "description": "Sprout API Platform — a Laravel platform starting as a polished template and evolving into the home for migrated services.",
+    "description": "Sprig API Platform — a Laravel platform starting as a polished template and evolving into the home for migrated services.",
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {

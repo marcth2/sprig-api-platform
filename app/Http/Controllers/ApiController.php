@@ -7,7 +7,7 @@ namespace App\Http\Controllers;
 use OpenApi\Attributes as OA;
 
 #[OA\Info(
-    title: 'Sprout API Platform',
+    title: 'Sprig API Platform',
     version: L5_SWAGGER_CONST_VERSION,
     description: 'Laravel 13 platform serving as a team starter template and home for migrated services. All endpoints require a Sanctum Bearer token (Authorization: Bearer <token>). API version is negotiated via the X-API-Version request header (current: v1).',
 )]

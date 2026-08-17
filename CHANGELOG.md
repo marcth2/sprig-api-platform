@@ -27,7 +27,7 @@ Patch release fixing two issues found in review of v0.1.0.
 ## [0.1.0] - 2026-08-17
 
 First tagged release. Phase one: a from-scratch rebuild of the HealthCheck domain and engineering
-conventions of an internal prototype, under Sprout API Platform branding and a simplified
+conventions of an internal prototype, under Sprig API Platform branding and a simplified
 trunk-based git workflow (single `master` branch, no `develop`).
 
 ### Added
@@ -51,7 +51,7 @@ trunk-based git workflow (single `master` branch, no `develop`).
 - Agentic tooling: Laravel Boost with an MCP server (`.mcp.json`), the `laravel-best-practices`
   skill, and Claude Code commands (`/validate`, `/ship`, `/test`, `/issue`, `/openapi-audit`,
   `/openapi-draft`).
-- Full "Sprout API Platform" display branding across composer metadata, `README.md`, the OpenAPI
+- Full "Sprig API Platform" display branding across composer metadata, `README.md`, the OpenAPI
   spec, and `.env.example` (technical slug `laravel-platform` unchanged).
 - A trunk-based CI workflow (`.github/workflows/ci.yml`) running the same five validation gates on
   every push/PR against `master`.

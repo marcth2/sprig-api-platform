@@ -47,7 +47,7 @@ jobs:
           context: .
           target: ci
           load: true
-          tags: sprout-api-platform-ci:latest
+          tags: sprig-api-platform-ci:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -55,7 +55,7 @@ jobs:
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/var/www/html \
-            sprout-api-platform-ci:latest \
+            sprig-api-platform-ci:latest \
             composer install --no-interaction --no-progress --prefer-dist
 
       - name: Generate APP_KEY
@@ -80,7 +80,7 @@ jobs:
             -e DB_USERNAME=laravel \
             -e DB_PASSWORD=${{ secrets.CI_DB_PASSWORD }} \
             -e REDIS_HOST=redis \
-            sprout-api-platform-ci:latest \
+            sprig-api-platform-ci:latest \
             composer test
 
       - name: Run PHPStan
@@ -89,14 +89,14 @@ jobs:
             -v ${{ github.workspace }}:/var/www/html \
             -e APP_KEY=${{ steps.appkey.outputs.value }} \
             -e APP_ENV=testing \
-            sprout-api-platform-ci:latest \
+            sprig-api-platform-ci:latest \
             composer analyse
 
       - name: Run Pint
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/var/www/html \
-            sprout-api-platform-ci:latest \
+            sprig-api-platform-ci:latest \
             composer format -- --test
 
       - name: Generate OpenAPI spec
@@ -109,7 +109,7 @@ jobs:
             -e APP_KEY=${{ steps.appkey.outputs.value }} \
             -e APP_ENV=testing \
             -e L5_SWAGGER_GENERATE_YAML_COPY=true \
-            sprout-api-platform-ci:latest \
+            sprig-api-platform-ci:latest \
             php artisan l5-swagger:generate
 
       - name: Audit OpenAPI spec
@@ -121,5 +121,5 @@ jobs:
             -v ${{ github.workspace }}:/var/www/html \
             -e APP_KEY=${{ steps.appkey.outputs.value }} \
             -e APP_ENV=testing \
-            sprout-api-platform-ci:latest \
+            sprig-api-platform-ci:latest \
             php artisan l5-swagger:audit --fail-on-warnings

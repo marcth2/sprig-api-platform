@@ -1,5 +1,5 @@
 #################################################################
-# Sprout API Platform Dockerfile
+# Sprig API Platform Dockerfile
 # Multi-stage: base → dev / ci / release
 # Web server: Nginx + PHP-FPM (separate containers via docker-compose)
 #################################################################
