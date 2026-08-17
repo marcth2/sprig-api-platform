@@ -16,8 +16,8 @@ jobs:
         env:
           MARIADB_DATABASE: laravel
           MARIADB_USER: laravel
-          MARIADB_PASSWORD: password
-          MARIADB_ROOT_PASSWORD: root
+          MARIADB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
+          MARIADB_ROOT_PASSWORD: ${{ secrets.CI_DB_ROOT_PASSWORD }}
         options: >-
           --health-cmd="healthcheck.sh --connect --innodb_initialized"
           --health-interval=10s
@@ -78,7 +78,7 @@ jobs:
             -e DB_HOST=mariadb \
             -e DB_DATABASE=laravel \
             -e DB_USERNAME=laravel \
-            -e DB_PASSWORD=password \
+            -e DB_PASSWORD=${{ secrets.CI_DB_PASSWORD }} \
             -e REDIS_HOST=redis \
             sprout-api-platform-ci:latest \
             composer test
