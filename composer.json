@@ -51,8 +51,10 @@
         ],
         "test": [
             "@php artisan config:clear --ansi",
-            "@php artisan test"
+            "@php artisan test --coverage --min=100"
         ],
+        "analyse": "./vendor/bin/phpstan analyse --memory-limit=-1",
+        "format": "./vendor/bin/pint",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

@@ -22,11 +22,9 @@ class RedisHealthCheck implements HealthCheckInterface
         try {
             $connection = Redis::connection();
 
-            /** @phpstan-ignore method.notFound */
             $connection->ping();
 
             /** @var array<string, mixed> $info */
-            /** @phpstan-ignore method.notFound */
             $info = $connection->info();
 
             $redisVersion = isset($info['redis_version']) && is_string($info['redis_version']) ? $info['redis_version'] : 'unknown';

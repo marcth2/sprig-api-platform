@@ -43,6 +43,20 @@ This is the mandatory convention for every domain added to this codebase, includ
 
 ---
 
+## Validation Gate
+
+Run before marking any implementation task complete. All three gates must pass:
+
+```bash
+docker compose exec app composer test
+docker compose exec app composer analyse
+docker compose exec app composer format -- --test
+```
+
+`composer test` runs the full suite with `--coverage --min=100`. `composer analyse` runs PHPStan at level max with no baseline. `composer format -- --test` runs Pint in dry-run mode; drop `-- --test` to auto-fix.
+
+---
+
 ## Conventions for Agentic Work
 
 - **All PHP commands:** run via `docker compose exec app` (no native PHP on host)
@@ -54,4 +68,4 @@ This is the mandatory convention for every domain added to this codebase, includ
 
 ---
 
-_Last updated: 2026-08-17 (Established domain architecture convention)_
+_Last updated: 2026-08-17 (Added the Validation Gate now that test coverage, PHPStan, and Pint are wired up)_
