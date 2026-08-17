@@ -4,7 +4,7 @@
 # Web server: Nginx + PHP-FPM (separate containers via docker-compose)
 #################################################################
 
-FROM php:8.4-fpm-alpine AS base
+FROM php:8.5-fpm-alpine AS base
 
 # System dependencies + PECL build tools
 RUN apk add --no-cache \
