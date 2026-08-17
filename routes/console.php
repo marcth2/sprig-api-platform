@@ -1,8 +1,17 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+declare(strict_types=1);
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+/**
+ * Console routes — Artisan command registration.
+ *
+ * Actions registered here are automatically wired as Artisan commands.
+ *
+ * @see https://laravelactions.com
+ * @see docs/architecture/README.md
+ */
+
+use App\HealthCheck\Actions\CheckServiceHealth;
+use Lorisleiva\Actions\Facades\Actions;
+
+Actions::registerCommandsForAction(CheckServiceHealth::class);
