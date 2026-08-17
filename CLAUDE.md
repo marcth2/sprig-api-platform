@@ -57,6 +57,8 @@ docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 
 `composer test` runs the full suite with `--coverage --min=100`. `composer analyse` runs PHPStan at level max with no baseline. `composer format -- --test` runs Pint in dry-run mode; drop `-- --test` to auto-fix. `l5-swagger:generate` regenerates the OpenAPI spec from annotations. `l5-swagger:audit` (a custom command in `app/Console/Commands/AuditOpenApiSpec.php`) fails on undocumented routes, phantom spec paths, or incomplete annotations.
 
+`.github/workflows/ci.yml` runs the same five gates on every push/PR against `master`, using the Dockerfile's `ci` build target (PCOV-enabled).
+
 ---
 
 ## Conventions for Agentic Work
