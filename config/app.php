@@ -1,6 +1,7 @@
 <?php
 
 use Dotenv\Dotenv;
+use Illuminate\Support\Env;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,7 +16,7 @@ use Dotenv\Dotenv;
 | adding version-related env vars should add them to VERSION, not .env.
 |
 */
-Dotenv::createImmutable(base_path(), 'VERSION')->safeLoad();
+Dotenv::create(Env::getRepository(), base_path(), 'VERSION')->safeLoad();
 
 return [
 
@@ -31,6 +32,19 @@ return [
     */
 
     'name' => env('APP_NAME', 'Laravel'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Version
+    |--------------------------------------------------------------------------
+    |
+    | Loaded from the VERSION file above. An obviously-wrong fallback is used
+    | so a missing VERSION file fails loudly instead of masquerading as a
+    | real release.
+    |
+    */
+
+    'version' => env('APP_VERSION', '0.0.0-unversioned'),
 
     /*
     |--------------------------------------------------------------------------
