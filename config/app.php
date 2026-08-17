@@ -1,5 +1,22 @@
 <?php
 
+use Dotenv\Dotenv;
+
+/*
+|--------------------------------------------------------------------------
+| Application Version File
+|--------------------------------------------------------------------------
+|
+| Version numbers are not secrets and belong in source control. The VERSION
+| file is committed to the repository and loaded here so APP_VERSION and
+| API_VERSION are available throughout the configuration layer.
+|
+| This is an intentional deviation from Laravel defaults. Any developer
+| adding version-related env vars should add them to VERSION, not .env.
+|
+*/
+Dotenv::createImmutable(base_path(), 'VERSION')->safeLoad();
+
 return [
 
     /*
