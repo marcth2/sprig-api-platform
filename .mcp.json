@@ -1,0 +1,10 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "type": "stdio",
+            "command": "docker",
+            "args": ["compose", "exec", "-T", "app", "php", "artisan", "boost:mcp"],
+            "cwd": "."
+        }
+    }
+}
