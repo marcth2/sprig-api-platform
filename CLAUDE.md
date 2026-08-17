@@ -70,6 +70,7 @@ docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 - **Domain CLAUDE.md:** every domain directory under `app/` gets a `CLAUDE.md` documenting: purpose, consumers, how to extend, auth model, and any non-obvious patterns
 - **OpenAPI annotations:** global spec annotations (`OA\Info`, `OA\Server`, `OA\SecurityScheme`, `OA\Tag`) live on `app/Http/Controllers/ApiController.php`. Operation docs (`OA\Get`, `OA\Post`, etc.) belong on the Action class. Schema docs (`OA\Schema`, `OA\Property`) belong on the DTO class — do not create standalone schema-holder classes in `app/OpenApi/`. `storage/api-docs/*` is a generated artifact — never hand-edit it
 - **VERSION file:** `VERSION` (project root) is the single source of truth for `APP_VERSION` and `API_VERSION`. Do not add version numbers to `.env`
+- **Release ritual:** a `CHANGELOG.md` entry (Keep a Changelog format) also gets an annotated tag and a GitHub Release, so a stable point is clonable/checkoutable instead of only `master` HEAD: `git tag -a vX.Y.Z -m '...' && git push origin vX.Y.Z && gh release create vX.Y.Z --notes-file <changelog-section>`. Immutable releases are enabled on this repo, so a published release's tag/assets can't be edited after the fact — get the notes right before publishing
 - **Keep this file current:** after completing a phase, adding a convention, or changing how the project is built or run — update `CLAUDE.md` before ending the session
 
 ---
@@ -83,4 +84,4 @@ docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 
 ---
 
-_Last updated: 2026-08-17 (Added Laravel Boost, MCP config, and Claude Code skills/commands)_
+_Last updated: 2026-08-17 (Documented the release tag + GitHub Release ritual for v0.1.0)_
