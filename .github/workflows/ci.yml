@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_DATABASE: laravel
+          MARIADB_USER: laravel
+          MARIADB_PASSWORD: password
+          MARIADB_ROOT_PASSWORD: root
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        ports:
+          - 3306:3306
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build CI image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: ci
+          load: true
+          tags: sprout-api-platform-ci:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Install Composer dependencies
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/var/www/html \
+            sprout-api-platform-ci:latest \
+            composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Generate APP_KEY
+        id: appkey
+        run: |
+          KEY="base64:$(openssl rand -base64 32)"
+          echo "::add-mask::$KEY"
+          echo "value=$KEY" >> $GITHUB_OUTPUT
+
+      - name: Run tests
+        run: |
+          docker run --rm \
+            --network host \
+            --add-host mariadb:127.0.0.1 \
+            --add-host redis:127.0.0.1 \
+            -v ${{ github.workspace }}:/var/www/html \
+            -e APP_KEY=${{ steps.appkey.outputs.value }} \
+            -e APP_ENV=testing \
+            -e DB_CONNECTION=mysql \
+            -e DB_HOST=mariadb \
+            -e DB_DATABASE=laravel \
+            -e DB_USERNAME=laravel \
+            -e DB_PASSWORD=password \
+            -e REDIS_HOST=redis \
+            sprout-api-platform-ci:latest \
+            composer test
+
+      - name: Run PHPStan
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/var/www/html \
+            -e APP_KEY=${{ steps.appkey.outputs.value }} \
+            -e APP_ENV=testing \
+            sprout-api-platform-ci:latest \
+            composer analyse
+
+      - name: Run Pint
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/var/www/html \
+            sprout-api-platform-ci:latest \
+            composer format -- --test
+
+      - name: Generate OpenAPI spec
+        run: |
+          docker run --rm \
+            --network host \
+            --add-host mariadb:127.0.0.1 \
+            --add-host redis:127.0.0.1 \
+            -v ${{ github.workspace }}:/var/www/html \
+            -e APP_KEY=${{ steps.appkey.outputs.value }} \
+            -e APP_ENV=testing \
+            -e L5_SWAGGER_GENERATE_YAML_COPY=true \
+            sprout-api-platform-ci:latest \
+            php artisan l5-swagger:generate
+
+      - name: Audit OpenAPI spec
+        run: |
+          docker run --rm \
+            --network host \
+            --add-host mariadb:127.0.0.1 \
+            --add-host redis:127.0.0.1 \
+            -v ${{ github.workspace }}:/var/www/html \
+            -e APP_KEY=${{ steps.appkey.outputs.value }} \
+            -e APP_ENV=testing \
+            sprout-api-platform-ci:latest \
+            php artisan l5-swagger:audit --fail-on-warnings
