@@ -40,6 +40,9 @@ docker compose exec app php artisan migrate
 
 # Generate OpenAPI spec (storage/api-docs/ is gitignored)
 docker compose exec app php artisan l5-swagger:generate
+
+# Enable the pre-commit hook (Pint + PHPStan on staged PHP files)
+git config core.hooksPath .githooks
 ```
 
 ---
