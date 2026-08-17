@@ -71,4 +71,13 @@ docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 
 ---
 
-_Last updated: 2026-08-17 (Wired OpenAPI documentation — added l5-swagger:generate and l5-swagger:audit to the Validation Gate, documented annotation placement conventions)_
+## Agentic Tooling
+
+- **Laravel Boost:** `boost.json` configures guidelines, MCP, and the `laravel-best-practices` skill. The MCP server is wired in `.mcp.json` and runs via `docker compose exec -T app php artisan boost:mcp`
+- **Skills:** `.claude/skills/laravel-best-practices/` — apply when writing, reviewing, or refactoring Laravel PHP code
+- **Commands:** `.claude/commands/` — `/validate` runs the five-gate check; `/ship` validates then walks through commit/push/PR with explicit developer confirmation; `/test` runs targeted or full test runs; `/issue <n>` starts a branch from an existing GitHub issue; `/openapi-audit` and `/openapi-draft` support the OpenAPI workflow
+- **Local settings:** `.claude/settings.local.json` is personal and gitignored — do not commit it
+
+---
+
+_Last updated: 2026-08-17 (Added Laravel Boost, MCP config, and Claude Code skills/commands)_
