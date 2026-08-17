@@ -45,15 +45,17 @@ This is the mandatory convention for every domain added to this codebase, includ
 
 ## Validation Gate
 
-Run before marking any implementation task complete. All three gates must pass:
+Run before marking any implementation task complete. All five gates must pass:
 
 ```bash
 docker compose exec app composer test
 docker compose exec app composer analyse
 docker compose exec app composer format -- --test
+docker compose exec app php artisan l5-swagger:generate
+docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 ```
 
-`composer test` runs the full suite with `--coverage --min=100`. `composer analyse` runs PHPStan at level max with no baseline. `composer format -- --test` runs Pint in dry-run mode; drop `-- --test` to auto-fix.
+`composer test` runs the full suite with `--coverage --min=100`. `composer analyse` runs PHPStan at level max with no baseline. `composer format -- --test` runs Pint in dry-run mode; drop `-- --test` to auto-fix. `l5-swagger:generate` regenerates the OpenAPI spec from annotations. `l5-swagger:audit` (a custom command in `app/Console/Commands/AuditOpenApiSpec.php`) fails on undocumented routes, phantom spec paths, or incomplete annotations.
 
 ---
 
@@ -63,9 +65,10 @@ docker compose exec app composer format -- --test
 - **Trunk-based git:** a single `master` branch, no `develop`. Never commit directly to `master` — create a branch, commit there, push, open a PR targeting `master`, and merge
 - **No AI attribution:** never include AI-attribution text (e.g. "Generated with Claude Code") in commit messages, PR descriptions, or GitHub issues
 - **Domain CLAUDE.md:** every domain directory under `app/` gets a `CLAUDE.md` documenting: purpose, consumers, how to extend, auth model, and any non-obvious patterns
+- **OpenAPI annotations:** global spec annotations (`OA\Info`, `OA\Server`, `OA\SecurityScheme`, `OA\Tag`) live on `app/Http/Controllers/ApiController.php`. Operation docs (`OA\Get`, `OA\Post`, etc.) belong on the Action class. Schema docs (`OA\Schema`, `OA\Property`) belong on the DTO class — do not create standalone schema-holder classes in `app/OpenApi/`. `storage/api-docs/*` is a generated artifact — never hand-edit it
 - **VERSION file:** `VERSION` (project root) is the single source of truth for `APP_VERSION` and `API_VERSION`. Do not add version numbers to `.env`
 - **Keep this file current:** after completing a phase, adding a convention, or changing how the project is built or run — update `CLAUDE.md` before ending the session
 
 ---
 
-_Last updated: 2026-08-17 (Added the Validation Gate now that test coverage, PHPStan, and Pint are wired up)_
+_Last updated: 2026-08-17 (Wired OpenAPI documentation — added l5-swagger:generate and l5-swagger:audit to the Validation Gate, documented annotation placement conventions)_
