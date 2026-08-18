@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-18
+
+Patch release fixing a defect found during manual QA of the HealthCheck domain (issue #34).
+
+### Fixed
+
+- `GET /api/health/mariadb` returned `503 down` from a fresh clone even with a healthy `mariadb`
+  container. `.env.example`'s `DB_CONNECTION` defaulted to `sqlite`, so Laravel's default database
+  connection never touched the provisioned `mariadb` service. `DB_CONNECTION`/`DB_HOST`/`DB_PORT`/
+  `DB_DATABASE`/`DB_USERNAME`/`DB_PASSWORD` in `.env.example` now point at `mariadb`, matching the
+  credentials `docker-compose.yml` already provisions for that service. No code change — the health
+  check itself was correct.
+
+### Changed
+
+- The wayfinder → release convention in `CLAUDE.md` now requires a wayfinder's manual QA issue to
+  close clean *before* the wayfinder itself closes, not just before the release — closing the gap
+  that let v0.1.1 ship before its own QA issue (#34) existed.
+
 ## [0.1.1] - 2026-08-17
 
 Patch release fixing two issues found in review of v0.1.0.
