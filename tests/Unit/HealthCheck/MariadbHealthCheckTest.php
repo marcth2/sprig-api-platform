@@ -50,4 +50,16 @@ class MariadbHealthCheckTest extends TestCase
         $this->assertSame(ServiceStatus::Down, $result->status);
         $this->assertSame(503, $result->code);
     }
+
+    public function test_check_against_real_mariadb_returns_ok(): void
+    {
+        $result = (new MariadbHealthCheck)->check();
+
+        $this->assertSame('mariadb', $result->service);
+        $this->assertSame(ServiceStatus::Ok, $result->status);
+        $this->assertSame(200, $result->code);
+        $this->assertStringContainsString('MariaDB', $result->meta['version']);
+        $this->assertGreaterThan(0, $result->meta['max_connections']);
+        $this->assertGreaterThanOrEqual(1, $result->meta['threads_connected']);
+    }
 }
