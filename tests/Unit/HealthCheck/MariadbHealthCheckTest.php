@@ -21,15 +21,15 @@ class MariadbHealthCheckTest extends TestCase
     {
         $connection = \Mockery::mock(Connection::class);
         $connection->shouldReceive('getPdo');
-
-        DB::shouldReceive('connection')->andReturn($connection);
-        DB::shouldReceive('scalar')->with('SELECT VERSION()')->andReturn('10.11.0-MariaDB');
-        DB::shouldReceive('selectOne')
+        $connection->shouldReceive('scalar')->with('SELECT VERSION()')->andReturn('10.11.0-MariaDB');
+        $connection->shouldReceive('selectOne')
             ->with("SHOW VARIABLES LIKE 'max_connections'")
             ->andReturn((object) ['Value' => '100']);
-        DB::shouldReceive('selectOne')
+        $connection->shouldReceive('selectOne')
             ->with("SHOW STATUS LIKE 'Threads_connected'")
             ->andReturn((object) ['Value' => '3']);
+
+        DB::shouldReceive('connection')->with('mariadb')->andReturn($connection);
 
         $result = (new MariadbHealthCheck)->check();
 
@@ -42,7 +42,7 @@ class MariadbHealthCheckTest extends TestCase
 
     public function test_check_returns_down_when_connection_fails(): void
     {
-        DB::shouldReceive('connection')->andThrow(new \Exception('Connection refused'));
+        DB::shouldReceive('connection')->with('mariadb')->andThrow(new \Exception('Connection refused'));
 
         $result = (new MariadbHealthCheck)->check();
 

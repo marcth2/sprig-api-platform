@@ -20,7 +20,7 @@ class RedisHealthCheck implements HealthCheckInterface
     {
         $start = hrtime(true);
         try {
-            $connection = Redis::connection();
+            $connection = Redis::connection('default');
 
             $connection->ping();
 

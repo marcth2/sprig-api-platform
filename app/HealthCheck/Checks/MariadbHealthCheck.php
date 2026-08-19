@@ -20,18 +20,19 @@ class MariadbHealthCheck implements HealthCheckInterface
     {
         $start = hrtime(true);
         try {
-            DB::connection()->getPdo();
+            $connection = DB::connection('mariadb');
+            $connection->getPdo();
 
-            $versionRaw = DB::scalar('SELECT VERSION()');
+            $versionRaw = $connection->scalar('SELECT VERSION()');
             $version = is_string($versionRaw) ? $versionRaw : 'unknown';
 
             /** @var object{Value: mixed}|null $maxRow */
-            $maxRow = DB::selectOne("SHOW VARIABLES LIKE 'max_connections'");
+            $maxRow = $connection->selectOne("SHOW VARIABLES LIKE 'max_connections'");
             $maxVal = $maxRow !== null && isset($maxRow->Value) ? $maxRow->Value : null;
             $maxConnections = is_numeric($maxVal) ? (int) $maxVal : 0;
 
             /** @var object{Value: mixed}|null $threadRow */
-            $threadRow = DB::selectOne("SHOW STATUS LIKE 'Threads_connected'");
+            $threadRow = $connection->selectOne("SHOW STATUS LIKE 'Threads_connected'");
             $threadVal = $threadRow !== null && isset($threadRow->Value) ? $threadRow->Value : null;
             $threadsConnected = is_numeric($threadVal) ? (int) $threadVal : 0;
 
