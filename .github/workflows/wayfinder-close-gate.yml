@@ -1,0 +1,101 @@
+name: Wayfinder close-gate
+
+on:
+  issues:
+    types: [closed]
+
+permissions:
+  issues: write
+
+jobs:
+  enforce:
+    if: contains(github.event.issue.labels.*.name, 'wayfinder:map')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify every child ticket satisfies its wayfinder type's completeness rule
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const mapNumber = context.payload.issue.number;
+            const labels = context.payload.issue.labels.map(l => l.name);
+            const isBuild = labels.includes('wayfinder:build');
+            const isPortfolio = labels.includes('wayfinder:portfolio');
+
+            if (!isBuild && !isPortfolio) {
+              core.setFailed(`Map #${mapNumber} is labeled wayfinder:map but has neither wayfinder:build nor wayfinder:portfolio. Cannot evaluate the close-gate without a declared type.`);
+              return;
+            }
+
+            const children = await github.paginate(
+              `GET /repos/{owner}/{repo}/issues/{issue_number}/sub_issues`,
+              { owner, repo, issue_number: mapNumber }
+            );
+
+            const violations = [];
+            let qaChildClosed = false;
+
+            for (const child of children) {
+              const childLabels = child.labels.map(l => l.name);
+
+              if (child.state !== 'closed') {
+                violations.push(`- #${child.number} "${child.title}" is still open`);
+                continue;
+              }
+
+              if (isBuild && childLabels.includes('quality assurance')) {
+                qaChildClosed = true;
+              }
+
+              if (isPortfolio && childLabels.includes('wayfinder:task')) {
+                const result = await github.graphql(
+                  `query($owner:String!, $repo:String!, $number:Int!) {
+                    repository(owner:$owner, name:$repo) {
+                      issue(number:$number) {
+                        closedByPullRequestsReferences(first: 10, includeClosedPrs: true) {
+                          nodes { number merged }
+                        }
+                      }
+                    }
+                  }`,
+                  { owner, repo, number: child.number }
+                );
+                const refs = result.repository.issue.closedByPullRequestsReferences.nodes;
+                const hasMergedPr = refs.some(pr => pr.merged);
+                if (!hasMergedPr) {
+                  violations.push(`- #${child.number} "${child.title}" is closed but has no merged PR linked (wayfinder:task tickets on a portfolio wayfinder must ship via a merged PR)`);
+                }
+              }
+            }
+
+            if (isBuild && children.length > 0 && !qaChildClosed) {
+              violations.push(`- no child carries the \`quality assurance\` label and is closed (a build wayfinder requires a QA issue anchored to the final commit SHA)`);
+            }
+
+            if (violations.length === 0) {
+              return;
+            }
+
+            await github.rest.issues.update({
+              owner,
+              repo,
+              issue_number: mapNumber,
+              state: 'open',
+            });
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: mapNumber,
+              body: [
+                'Reopened automatically: this wayfinder was closed before its close-gate is satisfied.',
+                '',
+                `Type: \`${isBuild ? 'wayfinder:build' : 'wayfinder:portfolio'}\``,
+                '',
+                'Outstanding:',
+                ...violations,
+              ].join('\n'),
+            });
+
+            core.setFailed(`Reopened #${mapNumber}: close-gate not satisfied.\n${violations.join('\n')}`);
