@@ -3,10 +3,16 @@
 # Single source of truth for application and API version numbers.
 # Loaded in config/app.php — overrides nothing, only sets what .env does not define.
 #
-# Versioning policy (semver):
-#   Major (1.x.x → 2.0.0)  breaking API contract change; X-API-Version header bumps (v1 → v2)
-#   Minor (1.0.x → 1.1.0)  new endpoints or response fields, backwards-compatible
-#   Patch (1.0.0 → 1.0.1)  bug fixes, no contract change
+# APP_VERSION and API_VERSION are independent (see #70 for the open question of how
+# they should stay in sync): APP_VERSION is the package release (semver, currently
+# pre-1.0), API_VERSION is the API contract major version served over X-API-Version /
+# the Accept header (config/api.php's supported_versions). Bumping one does not bump
+# the other.
+#
+# Versioning policy for APP_VERSION (semver):
+#   Major (1.x.x → 2.0.0)  a deliberate decision that the API is a stable public contract
+#   Minor (1.0.x → 1.1.0)  a wayfinder's worth of change, pre-1.0
+#   Patch (1.0.0 → 1.0.1)  out-of-band bug fixes between wayfinders
 
 APP_VERSION=0.1.2
-API_VERSION=${APP_VERSION}
+API_VERSION=1.0.0
