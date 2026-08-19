@@ -26,7 +26,7 @@ class RedisHealthCheckTest extends TestCase
             'connected_clients' => 2,
         ]);
 
-        Redis::shouldReceive('connection')->andReturn($connection);
+        Redis::shouldReceive('connection')->with('default')->andReturn($connection);
 
         $result = (new RedisHealthCheck)->check();
 
@@ -39,7 +39,7 @@ class RedisHealthCheckTest extends TestCase
 
     public function test_check_returns_down_when_connection_fails(): void
     {
-        Redis::shouldReceive('connection')->andThrow(new \Exception('Connection refused'));
+        Redis::shouldReceive('connection')->with('default')->andThrow(new \Exception('Connection refused'));
 
         $result = (new RedisHealthCheck)->check();
 
