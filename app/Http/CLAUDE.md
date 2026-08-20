@@ -8,13 +8,15 @@ This class carries the annotations that l5-swagger needs to generate the spec pr
 
 - `#[OA\Info]` — API title, version, description
 - `#[OA\Server]` — server URL
-- `#[OA\SecurityScheme]` — Sanctum bearer token definition
 - `#[OA\Tag]` — tag descriptions for grouping operations
+
+The Sanctum bearer token security scheme is **not** defined here — it's defined in `config/l5-swagger.php`'s `securityDefinitions.securitySchemes.sanctum`. l5-swagger's config-driven security definitions take precedence over an `#[OA\SecurityScheme]` annotation on this class, so an annotated copy would be silently dead code (removed in #57 after it drifted from the config's text).
 
 It contains no methods and handles no routes. Do not add request-handling logic here.
 
 **Where annotations go:**
-- Global spec annotations (`Info`, `Server`, `SecurityScheme`, `Tag`) → `ApiController`
+- Global spec annotations (`Info`, `Server`, `Tag`) → `ApiController`
+- The `sanctum` security scheme → `config/l5-swagger.php`
 - Path/operation annotations (`Get`, `Post`, `Put`, `Delete`) → Action class (`asController` method)
 - Schema annotations (`Schema`, `Property`) → DTO class
 

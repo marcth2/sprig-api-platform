@@ -4,7 +4,7 @@
 
 Global OpenAPI annotation artefacts that have no single-domain DTO owner. Classes here exist solely to carry `#[OA\Schema]` or other OpenAPI annotations that cannot be attached to any specific domain's data class.
 
-Global non-schema annotations (`#[OA\Info]`, `#[OA\Server]`, `#[OA\SecurityScheme]`, `#[OA\Tag]`) live on `app/Http/Controllers/ApiController.php`, not here.
+Global non-schema annotations (`#[OA\Info]`, `#[OA\Server]`, `#[OA\Tag]`) live on `app/Http/Controllers/ApiController.php`, not here. The `sanctum` security scheme lives in `config/l5-swagger.php`'s `securityDefinitions` — not as an `#[OA\SecurityScheme]` annotation anywhere (see #57).
 
 ---
 
