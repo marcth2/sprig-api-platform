@@ -41,6 +41,8 @@ Not every domain needs every subdirectory — a simple domain may only have `Act
 
 This is the mandatory convention for every domain added to this codebase, including domains introduced later for migrated services.
 
+**Eloquent Models are shared, not siloed** — they live in `app/Models/`, reflecting the underlying database schema, which itself is not siloed (e.g. `users.company_id`). Only `Data/` DTOs are domain-scoped; a domain's Models live outside its silo alongside every other domain's. Cross-domain behavior invocation (one domain's Action calling another's) defaults to a direct import; extract a Contract only once a second consumer, testing friction, or real churn in the depended-on domain makes the coupling costly — decide that Contract's ownership at extraction time, not upfront. Cross-domain notification uses plain in-process Laravel events; sync vs. queued is decided per event when a real need exists. See [ADR-0002](docs/adr/0002-cross-domain-dependency-and-shared-models.md).
+
 ---
 
 ## Validation Gate
@@ -89,4 +91,4 @@ docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 
 ---
 
-_Last updated: 2026-08-20 (Restored Boost MCP tool-usage guidance dropped during the port from the reference sibling, #61)_
+_Last updated: 2026-08-20 (Recorded the shared-Models / direct-import-first cross-domain dependency convention, #63)_
