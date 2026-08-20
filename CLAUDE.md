@@ -82,10 +82,11 @@ docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 ## Agentic Tooling
 
 - **Laravel Boost:** `boost.json` configures guidelines, MCP, and the `laravel-best-practices` skill. The MCP server is wired in `.mcp.json` and runs via `docker compose exec -T app php artisan boost:mcp`
+- **Boost MCP tool usage:** reach for these over an ad hoc alternative — `search-docs`: always run before coding against a Laravel-ecosystem package (Laravel, Sanctum, Pest, etc.); it returns version-specific documentation for this project's actual installed versions, not general knowledge. `database-query`: run a read-only SQL query (`SELECT`/`SHOW`/`EXPLAIN`/`DESCRIBE`) against a configured connection instead of shelling into `tinker` or `mysql`. `database-schema`: inspect table/column/index/foreign-key structure — call with `summary` first for an overview, then again with `filter` for full details on specific tables. `get-absolute-url`: resolve a relative path or named route to its absolute URL instead of hand-constructing one. `browser-logs`: read recent frontend/JS console output when debugging client-side behavior
 - **Skills:** `.claude/skills/laravel-best-practices/` — apply when writing, reviewing, or refactoring Laravel PHP code
 - **Commands:** `.claude/commands/` — `/validate` runs the five-gate check; `/ship` validates then walks through commit/push/PR with explicit developer confirmation; `/test` runs targeted or full test runs; `/issue <n>` starts a branch from an existing GitHub issue; `/openapi-audit` and `/openapi-draft` support the OpenAPI workflow
 - **Local settings:** `.claude/settings.local.json` is personal and gitignored — do not commit it
 
 ---
 
-_Last updated: 2026-08-20 (Wired `git config core.hooksPath .githooks` into composer.json's `setup` script so a fresh checkout actually enables the pre-commit hook, #59)_
+_Last updated: 2026-08-20 (Restored Boost MCP tool-usage guidance dropped during the port from the reference sibling, #61)_
