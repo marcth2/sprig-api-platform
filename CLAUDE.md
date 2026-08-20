@@ -10,7 +10,7 @@ Agentic project instructions for Claude Code. Read this file before making any c
 
 Both are written to be readable by Product Owners and AI agents. `app/{Domain}/Actions/` is a product catalogue — each class name maps directly to a business requirement. DTOs make the data contract explicit without reading implementation code.
 
-**Grow as you go.** Start with an Action and a DTO. Add a Service class only when an Action becomes too complex. Add repositories, events, and query objects only when the need is real — not in anticipation of it.
+**Grow as you go.** Start with an Action and a DTO. Add a Service class when an Action needs to orchestrate multiple collaborators — e.g. resolving a tagged collection of implementations via IoC, as `HealthCheckerService` does for the HealthCheck domain's checkers — not as a place to move logic just because an Action feels long. Add repositories, events, and query objects only when the need is real — not in anticipation of it.
 
 ---
 
