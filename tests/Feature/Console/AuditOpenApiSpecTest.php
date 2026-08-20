@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Console;
 
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class AuditOpenApiSpecTest extends TestCase
@@ -75,6 +76,25 @@ class AuditOpenApiSpecTest extends TestCase
     {
         $this->artisan('l5-swagger:audit', [
             '--spec-file' => $this->fixturePath('duplicate-operationid.yaml'),
+            '--fail-on-warnings' => true,
+        ])->assertExitCode(1);
+    }
+
+    public function test_route_missing_api_middleware_is_warning_by_default(): void
+    {
+        Route::get('/api/misrouted', fn () => response()->json([]));
+
+        $this->artisan('l5-swagger:audit', [
+            '--spec-file' => $this->fixturePath('complete.yaml'),
+        ])->assertExitCode(0);
+    }
+
+    public function test_route_missing_api_middleware_exits_nonzero_with_fail_on_warnings(): void
+    {
+        Route::get('/api/misrouted', fn () => response()->json([]));
+
+        $this->artisan('l5-swagger:audit', [
+            '--spec-file' => $this->fixturePath('complete.yaml'),
             '--fail-on-warnings' => true,
         ])->assertExitCode(1);
     }

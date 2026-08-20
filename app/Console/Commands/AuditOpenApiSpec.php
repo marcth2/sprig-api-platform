@@ -12,10 +12,10 @@ use Symfony\Component\Yaml\Yaml;
 class AuditOpenApiSpec extends Command
 {
     protected $signature = 'l5-swagger:audit
-        {--fail-on-warnings : Exit non-zero when warnings (incomplete annotations) are found}
+        {--fail-on-warnings : Exit non-zero when warnings (incomplete annotations, routes missing api middleware) are found}
         {--spec-file= : Path to OpenAPI spec file (defaults to configured l5-swagger output)}';
 
-    protected $description = 'Audit OpenAPI spec — detect undocumented routes, phantom paths, and incomplete annotations';
+    protected $description = 'Audit OpenAPI spec — detect undocumented routes, phantom paths, routes missing api middleware, and incomplete annotations';
 
     public function handle(): int
     {
@@ -32,18 +32,21 @@ class AuditOpenApiSpec extends Command
         /** @var array<string, mixed> $spec */
         $spec = Yaml::parseFile($specFile);
         $specPaths = $this->extractSpecPaths($spec);
-        $routes = $this->getAuditableRoutes();
+        $allRoutes = $this->getAllRoutes();
+        $routes = $this->filterApiRoutes($allRoutes);
 
         $undocumented = $this->findUndocumented($routes, $specPaths);
         $phantom = $this->findPhantom($routes, $specPaths);
         $incomplete = $this->findIncomplete($routes, $specPaths);
+        $missingApiMiddleware = $this->findMissingApiMiddleware($allRoutes);
 
         $this->reportUndocumented($undocumented);
         $this->reportPhantom($phantom);
+        $this->reportMissingApiMiddleware($missingApiMiddleware);
         $this->reportIncomplete($incomplete);
 
         $hasErrors = count($undocumented) > 0 || count($phantom) > 0;
-        $hasWarnings = count($incomplete) > 0;
+        $hasWarnings = count($incomplete) > 0 || count($missingApiMiddleware) > 0;
 
         if ($hasErrors) {
             $total = count($undocumented) + count($phantom);
@@ -54,8 +57,9 @@ class AuditOpenApiSpec extends Command
         }
 
         if ($hasWarnings && $this->option('fail-on-warnings')) {
+            $totalWarnings = count($incomplete) + count($missingApiMiddleware);
             $this->newLine();
-            $this->error('Audit failed: '.count($incomplete).' warning(s) found (--fail-on-warnings).');
+            $this->error("Audit failed: {$totalWarnings} warning(s) found (--fail-on-warnings).");
 
             return self::FAILURE;
         }
@@ -68,11 +72,13 @@ class AuditOpenApiSpec extends Command
                 ['Spec paths', (string) count($specPaths)],
                 ['Undocumented routes', '0'],
                 ['Phantom spec paths', '0'],
-                ['Incomplete annotations', $hasWarnings ? count($incomplete).' warning(s)' : '0'],
+                ['Routes missing api middleware', count($missingApiMiddleware) > 0 ? count($missingApiMiddleware).' warning(s)' : '0'],
+                ['Incomplete annotations', count($incomplete) > 0 ? count($incomplete).' warning(s)' : '0'],
             ]
         );
 
-        $warningNote = $hasWarnings ? ' ('.count($incomplete).' warning(s))' : '';
+        $totalWarnings = count($incomplete) + count($missingApiMiddleware);
+        $warningNote = $hasWarnings ? " ({$totalWarnings} warning(s))" : '';
         $this->info("Audit passed{$warningNote}.");
 
         return self::SUCCESS;
@@ -118,9 +124,11 @@ class AuditOpenApiSpec extends Command
     }
 
     /**
+     * All routes except the l5-swagger UI/docs routes themselves.
+     *
      * @return array<int, array{method: string, uri: string, middleware: string[]}>
      */
-    private function getAuditableRoutes(): array
+    private function getAllRoutes(): array
     {
         $routes = [];
 
@@ -129,7 +137,7 @@ class AuditOpenApiSpec extends Command
             /** @var string[] $middleware */
             $middleware = $route->middleware();
 
-            if ($this->isL5SwaggerRoute($middleware) || ! in_array('api', $middleware)) {
+            if ($this->isL5SwaggerRoute($middleware)) {
                 continue;
             }
 
@@ -152,6 +160,18 @@ class AuditOpenApiSpec extends Command
         return $routes;
     }
 
+    /**
+     * @param  array<int, array{method: string, uri: string, middleware: string[]}>  $routes
+     * @return array<int, array{method: string, uri: string, middleware: string[]}>
+     */
+    private function filterApiRoutes(array $routes): array
+    {
+        return array_values(array_filter(
+            $routes,
+            fn (array $r): bool => in_array('api', $r['middleware'])
+        ));
+    }
+
     /** @param string[] $middleware */
     private function isL5SwaggerRoute(array $middleware): bool
     {
@@ -162,6 +182,22 @@ class AuditOpenApiSpec extends Command
         }
 
         return false;
+    }
+
+    /**
+     * A route under api/ that skipped the api middleware group is invisible to every other
+     * check below — it never reaches $routes, so it can't be flagged undocumented either.
+     * That's exactly how a misrouted domain would pass the audit clean while fully undocumented.
+     *
+     * @param  array<int, array{method: string, uri: string, middleware: string[]}>  $routes
+     * @return array<int, array{method: string, uri: string, middleware: string[]}>
+     */
+    private function findMissingApiMiddleware(array $routes): array
+    {
+        return array_values(array_filter(
+            $routes,
+            fn (array $r): bool => str_starts_with($r['uri'], 'api/') && ! in_array('api', $r['middleware'])
+        ));
     }
 
     /**
@@ -307,6 +343,21 @@ class AuditOpenApiSpec extends Command
         $this->table(
             ['Method', 'Path'],
             array_map(fn (array $p): array => [strtoupper($p['method']), '/'.$p['path']], $phantom)
+        );
+    }
+
+    /** @param array<int, array{method: string, uri: string, middleware: string[]}> $missingApiMiddleware */
+    private function reportMissingApiMiddleware(array $missingApiMiddleware): void
+    {
+        if (empty($missingApiMiddleware)) {
+            return;
+        }
+
+        $this->newLine();
+        $this->line('<fg=yellow>Routes missing api middleware ('.count($missingApiMiddleware).') — warnings:</>');
+        $this->table(
+            ['Method', 'URI'],
+            array_map(fn (array $r): array => [strtoupper($r['method']), '/'.$r['uri']], $missingApiMiddleware)
         );
     }
 
