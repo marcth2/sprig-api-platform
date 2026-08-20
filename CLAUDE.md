@@ -64,7 +64,7 @@ docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 ## Conventions for Agentic Work
 
 - **All PHP commands:** run via `docker compose exec app` (no native PHP on host)
-- **Pre-commit hook:** `.githooks/pre-commit` runs Pint + PHPStan on staged PHP files. Enable it once per checkout with `git config core.hooksPath .githooks`
+- **Pre-commit hook:** `.githooks/pre-commit` runs Pint + PHPStan on staged PHP files. `composer setup` wires it in via `git config core.hooksPath .githooks` — a checkout that skips `composer setup` must run that command manually
 - **Trunk-based git:** a single `master` branch, no `develop`. Never commit directly to `master` — create a branch, commit there, push, open a PR targeting `master`, and merge
 - **No AI attribution:** never include AI-attribution text (e.g. "Generated with Claude Code") in commit messages, PR descriptions, or GitHub issues
 - **Domain CLAUDE.md:** every domain directory under `app/` gets a `CLAUDE.md` documenting: purpose, consumers, how to extend, auth model, and any non-obvious patterns
@@ -88,4 +88,4 @@ docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 
 ---
 
-_Last updated: 2026-08-20 (Removed the dead duplicate sanctum SecurityScheme annotation from ApiController; config/l5-swagger.php is the actual canonical location, #57)_
+_Last updated: 2026-08-20 (Wired `git config core.hooksPath .githooks` into composer.json's `setup` script so a fresh checkout actually enables the pre-commit hook, #59)_
