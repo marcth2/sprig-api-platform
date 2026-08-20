@@ -64,6 +64,21 @@ class AuditOpenApiSpecTest extends TestCase
         ])->assertExitCode(1);
     }
 
+    public function test_duplicate_operationid_is_warning_by_default(): void
+    {
+        $this->artisan('l5-swagger:audit', [
+            '--spec-file' => $this->fixturePath('duplicate-operationid.yaml'),
+        ])->assertExitCode(0);
+    }
+
+    public function test_duplicate_operationid_exits_nonzero_with_fail_on_warnings(): void
+    {
+        $this->artisan('l5-swagger:audit', [
+            '--spec-file' => $this->fixturePath('duplicate-operationid.yaml'),
+            '--fail-on-warnings' => true,
+        ])->assertExitCode(1);
+    }
+
     public function test_handles_null_paths_in_spec(): void
     {
         $this->artisan('l5-swagger:audit', [

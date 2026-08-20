@@ -209,6 +209,8 @@ class AuditOpenApiSpec extends Command
             $specBySignature[$path['method'].':'.$path['path']] = $path['operation'];
         }
 
+        $operationIdCounts = $this->countOperationIds($specPaths);
+
         $issues = [];
 
         foreach ($routes as $route) {
@@ -221,8 +223,13 @@ class AuditOpenApiSpec extends Command
             $operation = $specBySignature[$sig];
             $routeIssues = [];
 
-            if (empty($operation['operationId'])) {
+            $operationIdRaw = $operation['operationId'] ?? null;
+            $operationId = is_string($operationIdRaw) ? $operationIdRaw : null;
+
+            if ($operationId === null || $operationId === '') {
                 $routeIssues[] = 'missing operationId';
+            } elseif (($operationIdCounts[$operationId] ?? 0) > 1) {
+                $routeIssues[] = "duplicate operationId '{$operationId}' (used by {$operationIdCounts[$operationId]} operations)";
             }
 
             if ($this->routeHasSanctum($route['middleware'])) {
@@ -241,6 +248,27 @@ class AuditOpenApiSpec extends Command
         }
 
         return $issues;
+    }
+
+    /**
+     * @param  array<int, array{method: string, path: string, operation: array<string, mixed>}>  $specPaths
+     * @return array<string, int>
+     */
+    private function countOperationIds(array $specPaths): array
+    {
+        $counts = [];
+
+        foreach ($specPaths as $path) {
+            $operationIdRaw = $path['operation']['operationId'] ?? null;
+
+            if (! is_string($operationIdRaw) || $operationIdRaw === '') {
+                continue;
+            }
+
+            $counts[$operationIdRaw] = ($counts[$operationIdRaw] ?? 0) + 1;
+        }
+
+        return $counts;
     }
 
     /** @param string[] $middleware */
