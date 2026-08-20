@@ -102,9 +102,6 @@ jobs:
       - name: Generate OpenAPI spec
         run: |
           docker run --rm \
-            --network host \
-            --add-host mariadb:127.0.0.1 \
-            --add-host redis:127.0.0.1 \
             -v ${{ github.workspace }}:/var/www/html \
             -e APP_KEY=${{ steps.appkey.outputs.value }} \
             -e APP_ENV=testing \
@@ -115,9 +112,6 @@ jobs:
       - name: Audit OpenAPI spec
         run: |
           docker run --rm \
-            --network host \
-            --add-host mariadb:127.0.0.1 \
-            --add-host redis:127.0.0.1 \
             -v ${{ github.workspace }}:/var/www/html \
             -e APP_KEY=${{ steps.appkey.outputs.value }} \
             -e APP_ENV=testing \
