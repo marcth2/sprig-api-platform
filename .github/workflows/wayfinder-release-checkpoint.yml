@@ -60,7 +60,7 @@ jobs:
                 owner,
                 repo,
                 issue_number: wf.number,
-                body: `Release [\`${tag}\`](https://github.com/${owner}/${repo}/releases/tag/${tag})'s CHANGELOG entry references this wayfinder, but it's still open. Per the wayfinder -> QA -> release sequencing rule (CLAUDE.md), a release should not be cut before its wayfinder closes. This is a detection-only flag: the tag/release is immutable and was not touched.`,
+                body: `Release [\`${tag}\`](https://github.com/${owner}/${repo}/releases/tag/${tag})'s CHANGELOG entry references this wayfinder, but it's still open. Per the wayfinder -> verification -> release sequencing rule (CLAUDE.md), a release should not be cut before its wayfinder closes. This is a detection-only flag: the tag/release is immutable and was not touched.`,
               });
             }
 
