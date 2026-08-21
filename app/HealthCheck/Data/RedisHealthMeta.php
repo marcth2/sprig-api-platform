@@ -26,6 +26,7 @@ class RedisHealthMeta extends Data implements HealthCheckMetaData
             example: '7.0.0'
         )]
         public readonly string $version,
+
         #[OA\Property(
             property: 'used_memory',
             type: 'string',
@@ -36,6 +37,7 @@ class RedisHealthMeta extends Data implements HealthCheckMetaData
             example: '1048576'
         )]
         public readonly string $usedMemory,
+
         #[OA\Property(
             property: 'connected_clients',
             type: 'integer',

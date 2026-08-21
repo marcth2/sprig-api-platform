@@ -18,15 +18,7 @@ use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 )]
 class AppHealthMeta extends Data implements HealthCheckMetaData
 {
-    /**
-     * @param  list<string>  $degradedReasons
-     * @param  array{
-     *     memory_limit: string,
-     *     max_execution_time: string,
-     *     post_max_size: string,
-     *     opcache_enabled: bool,
-     * }  $phpIni
-     */
+    /** @param list<string> $degradedReasons */
     public function __construct(
         #[OA\Property(
             property: 'app_version',
@@ -35,6 +27,7 @@ class AppHealthMeta extends Data implements HealthCheckMetaData
             example: '1.2.0'
         )]
         public readonly string $appVersion,
+
         #[OA\Property(
             property: 'php_version',
             type: 'string',
@@ -42,6 +35,7 @@ class AppHealthMeta extends Data implements HealthCheckMetaData
             example: '8.4.0'
         )]
         public readonly string $phpVersion,
+
         #[OA\Property(
             property: 'framework_version',
             type: 'string',
@@ -49,6 +43,7 @@ class AppHealthMeta extends Data implements HealthCheckMetaData
             example: '13.25.0'
         )]
         public readonly string $frameworkVersion,
+
         #[OA\Property(
             property: 'environment',
             type: 'string',
@@ -56,6 +51,7 @@ class AppHealthMeta extends Data implements HealthCheckMetaData
             example: 'production'
         )]
         public readonly string $environment,
+
         #[OA\Property(
             property: 'maintenance_mode',
             type: 'boolean',
@@ -63,6 +59,7 @@ class AppHealthMeta extends Data implements HealthCheckMetaData
             example: false
         )]
         public readonly bool $maintenanceMode,
+
         #[OA\Property(
             property: 'degraded_reasons',
             type: 'array',
@@ -73,13 +70,8 @@ class AppHealthMeta extends Data implements HealthCheckMetaData
             items: new OA\Items(type: 'string')
         )]
         public readonly array $degradedReasons,
-        #[OA\Property(
-            property: 'php_ini',
-            type: 'object',
-            description: 'Relevant php.ini directives: memory_limit, max_execution_time, post_max_size,'
-                .' opcache_enabled.',
-            additionalProperties: new OA\AdditionalProperties
-        )]
-        public readonly array $phpIni,
+
+        #[OA\Property(property: 'php_ini', ref: '#/components/schemas/PhpIniData')]
+        public readonly PhpIniData $phpIni,
     ) {}
 }

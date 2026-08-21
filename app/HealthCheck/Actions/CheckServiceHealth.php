@@ -303,7 +303,7 @@ class CheckServiceHealth
     }
 
     /**
-     * @param  array<array-key, mixed>  $meta
+     * @param array<array-key, mixed> $meta
      * @return list<array{string, string}>
      */
     private function flattenMeta(array $meta, string $prefix = ''): array

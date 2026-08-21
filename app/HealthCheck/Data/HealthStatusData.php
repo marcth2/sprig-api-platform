@@ -28,6 +28,7 @@ class HealthStatusData extends Data
             example: 'redis',
         )]
         public readonly string $service,
+
         #[OA\Property(
             property: 'status',
             type: 'string',
@@ -39,6 +40,7 @@ class HealthStatusData extends Data
             example: 'ok',
         )]
         public readonly ServiceStatus $status,
+
         #[OA\Property(
             property: 'code',
             type: 'integer',
@@ -46,6 +48,7 @@ class HealthStatusData extends Data
             example: 200,
         )]
         public readonly int $code,
+
         #[OA\Property(
             property: 'execution_time_ms',
             type: 'integer',
@@ -56,6 +59,7 @@ class HealthStatusData extends Data
             example: 3,
         )]
         public readonly int $executionTimeMs,
+
         #[OA\Property(
             property: 'meta',
             type: 'object',

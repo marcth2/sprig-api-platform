@@ -27,6 +27,7 @@ class HealthAggregateData extends Data
             items: new OA\Items(ref: '#/components/schemas/HealthStatusResource'),
         )]
         public readonly array $services,
+
         #[OA\Property(
             property: 'healthy',
             type: 'boolean',
@@ -34,6 +35,7 @@ class HealthAggregateData extends Data
             example: true,
         )]
         public readonly bool $healthy,
+
         #[OA\Property(
             property: 'checked_at',
             type: 'string',

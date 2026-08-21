@@ -91,7 +91,7 @@ class AuditOpenApiSpec extends Command
     }
 
     /**
-     * @param  array<string, mixed>  $spec
+     * @param array<string, mixed> $spec
      * @return array<int, array{method: string, path: string, operation: array<string, mixed>}>
      */
     private function extractSpecPaths(array $spec): array
@@ -167,7 +167,7 @@ class AuditOpenApiSpec extends Command
     }
 
     /**
-     * @param  array<int, array{method: string, uri: string, middleware: string[]}>  $routes
+     * @param array<int, array{method: string, uri: string, middleware: string[]}> $routes
      * @return array<int, array{method: string, uri: string, middleware: string[]}>
      */
     private function filterApiRoutes(array $routes): array
@@ -195,7 +195,7 @@ class AuditOpenApiSpec extends Command
      * check below — it never reaches $routes, so it can't be flagged undocumented either.
      * That's exactly how a misrouted domain would pass the audit clean while fully undocumented.
      *
-     * @param  array<int, array{method: string, uri: string, middleware: string[]}>  $routes
+     * @param array<int, array{method: string, uri: string, middleware: string[]}> $routes
      * @return array<int, array{method: string, uri: string, middleware: string[]}>
      */
     private function findMissingApiMiddleware(array $routes): array
@@ -207,8 +207,8 @@ class AuditOpenApiSpec extends Command
     }
 
     /**
-     * @param  array<int, array{method: string, uri: string, middleware: string[]}>  $routes
-     * @param  array<int, array{method: string, path: string, operation: array<string, mixed>}>  $specPaths
+     * @param array<int, array{method: string, uri: string, middleware: string[]}> $routes
+     * @param array<int, array{method: string, path: string, operation: array<string, mixed>}> $specPaths
      * @return array<int, array{method: string, uri: string, middleware: string[]}>
      */
     private function findUndocumented(array $routes, array $specPaths): array
@@ -224,8 +224,8 @@ class AuditOpenApiSpec extends Command
     /**
      * Only api/ prefixed paths are checked — non-api paths (e.g. /up) are excluded from phantom detection.
      *
-     * @param  array<int, array{method: string, uri: string, middleware: string[]}>  $routes
-     * @param  array<int, array{method: string, path: string, operation: array<string, mixed>}>  $specPaths
+     * @param array<int, array{method: string, uri: string, middleware: string[]}> $routes
+     * @param array<int, array{method: string, path: string, operation: array<string, mixed>}> $specPaths
      * @return array<int, array{method: string, path: string, operation: array<string, mixed>}>
      */
     private function findPhantom(array $routes, array $specPaths): array
@@ -240,8 +240,8 @@ class AuditOpenApiSpec extends Command
     }
 
     /**
-     * @param  array<int, array{method: string, uri: string, middleware: string[]}>  $routes
-     * @param  array<int, array{method: string, path: string, operation: array<string, mixed>}>  $specPaths
+     * @param array<int, array{method: string, uri: string, middleware: string[]}> $routes
+     * @param array<int, array{method: string, path: string, operation: array<string, mixed>}> $specPaths
      * @return array<int, array{route: string, issues: string[]}>
      */
     private function findIncomplete(array $routes, array $specPaths): array
@@ -294,7 +294,7 @@ class AuditOpenApiSpec extends Command
     }
 
     /**
-     * @param  array<int, array{method: string, path: string, operation: array<string, mixed>}>  $specPaths
+     * @param array<int, array{method: string, path: string, operation: array<string, mixed>}> $specPaths
      * @return array<string, int>
      */
     private function countOperationIds(array $specPaths): array
