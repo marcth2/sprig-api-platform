@@ -29,6 +29,7 @@ This project uses a siloed domain architecture. Each domain lives under `app/{Do
 ```
 app/{Domain}/
 ├── Actions/     # One class per use case (lorisleiva/laravel-actions)
+├── Checks/      # Interface implementations selected by config/runtime (e.g. HealthCheck's checkers)
 ├── Data/        # Spatie Data DTOs — request input and response output
 ├── Contracts/   # Interfaces the domain exposes or depends on
 ├── Enums/       # Domain enumerations
