@@ -66,8 +66,10 @@ class AppHealthMeta extends Data implements HealthCheckMetaData
         #[OA\Property(
             property: 'degraded_reasons',
             type: 'array',
-            description: 'Reasons the status is degraded (maintenance_mode, debug_enabled, opcache_disabled,'
-                .' memory_limit_low). Empty when ok.',
+            description: <<<'TEXT'
+                Reasons the status is degraded (maintenance_mode, debug_enabled, opcache_disabled,
+                memory_limit_low). Empty when ok.
+                TEXT,
             items: new OA\Items(type: 'string')
         )]
         public readonly array $degradedReasons,

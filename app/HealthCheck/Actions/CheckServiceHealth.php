@@ -45,9 +45,11 @@ class CheckServiceHealth
         path: '/api/health',
         operationId: 'getHealthAggregate',
         summary: 'All services health check',
-        description: 'Returns the health status of all registered services (app, mariadb, redis) as an aggregate.'
-            .' Responds 200 when every service is ok; responds 503 when one or more services are degraded or down.'
-            .' Use this endpoint in post-deploy readiness probes.',
+        description: <<<'TEXT'
+            Returns the health status of all registered services (app, mariadb, redis) as an aggregate.
+            Responds 200 when every service is ok; responds 503 when one or more services are degraded or down.
+            Use this endpoint in post-deploy readiness probes.
+            TEXT,
         security: [['sanctum' => []]],
         tags: ['HealthCheck'],
         responses: [
@@ -180,9 +182,11 @@ class CheckServiceHealth
         path: '/api/health/{service}',
         operationId: 'getServiceHealth',
         summary: 'Single service health check',
-        description: 'Returns the health status of a single named service. Use for targeted diagnostics when a'
-            .' specific service appears unhealthy. The meta field carries service-specific detail (e.g. opcache'
-            .' state for app, connection latency for mariadb).',
+        description: <<<'TEXT'
+            Returns the health status of a single named service. Use for targeted diagnostics when a
+            specific service appears unhealthy. The meta field carries service-specific detail (e.g. opcache
+            state for app, connection latency for mariadb).
+            TEXT,
         security: [['sanctum' => []]],
         tags: ['HealthCheck'],
         parameters: [
@@ -190,8 +194,10 @@ class CheckServiceHealth
                 name: 'service',
                 in: 'path',
                 required: true,
-                description: 'Name of the service to check. Valid values: app (Laravel application runtime),'
-                    .' mariadb (primary database), redis (cache and session store). Returns 404 for any other value.',
+                description: <<<'TEXT'
+                    Name of the service to check. Valid values: app (Laravel application runtime),
+                    mariadb (primary database), redis (cache and session store). Returns 404 for any other value.
+                    TEXT,
                 schema: new OA\Schema(type: 'string', enum: ['app', 'mariadb', 'redis'])
             ),
         ],

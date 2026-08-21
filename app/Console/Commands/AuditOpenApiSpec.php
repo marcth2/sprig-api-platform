@@ -15,8 +15,10 @@ class AuditOpenApiSpec extends Command
         {--fail-on-warnings : Exit non-zero on warnings (incomplete annotations, missing api middleware)}
         {--spec-file= : Path to OpenAPI spec file (defaults to configured l5-swagger output)}';
 
-    protected $description = 'Audit OpenAPI spec — undocumented routes, phantom paths,'
-        .' routes missing api middleware, incomplete annotations';
+    protected $description = <<<'TEXT'
+        Audit OpenAPI spec — undocumented routes, phantom paths,
+        routes missing api middleware, incomplete annotations
+        TEXT;
 
     public function handle(): int
     {
