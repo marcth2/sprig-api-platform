@@ -1,0 +1,18 @@
+# Require QA-verifier independence, implemented via fresh-context agent execution rather than a second human
+
+**Status:** accepted
+
+The fix for the original #14/#34 sequencing gap (PR #36) was itself self-authored, self-reviewed (zero reviews), and self-merged by the same actor who wrote the rule, violated it, and fixed it. CLAUDE.md recorded this gap rather than let it pass silently, and opened #73 to decide whether implementer/QA-verifier independence should be required going forward. `marcth2` is the only human contributor to this repo (verified via the GitHub API — the only other contributor is `dependabot[bot]`), so any answer has to work without assuming a second human ever joins. GitHub blocks self-approval on a PR, which is why every self-authored PR here merges via admin bypass instead (see #76, tracked separately) — but it has no equivalent check for closing an issue, so a QA issue's closure carried zero independence signal at all.
+
+We're requiring independence now, implemented as: a `wayfinder:build`'s QA issue is executed by a fresh-context agent session — one with no prior conversation memory of the implementation work, not the session or fork that built the feature — rather than by the implementer's own recollection of having already tested it. On checklist items where human judgment adds real value, that agent blocks and asks whether the human wants to run additional manual testing before proceeding; routine items don't require this prompt. The agent only gets authority to close the issue on a fully passing checklist — any failing item leaves the issue open and documented, exactly as #34 stayed open until PR #35 landed the actual fix. Because GitHub can't detect whether a session was genuinely fresh-context (the acting account is `marcth2` either way, unlike the identity check behind self-PR-approval blocking), the QA issue's evidence comment must include an explicit self-report line confirming fresh session / no prior implementation context — a documented convention, not a technical gate.
+
+## Considered Options
+
+- **No independence requirement (status quo)** — rejected: leaves the exact PR #36 gap open indefinitely, with no accountability check on either side of a QA closure.
+- **Defer until a second human contributor exists**, mirroring #66's deferral of domain-silo enforcement — rejected: the fresh-context-agent mechanism doesn't depend on headcount, so gating it on a hire that may never happen is unnecessary delay for a mechanism already available today.
+- **Require a second human reviewer to close every QA issue** — rejected: there is no second human today, and manufacturing one (e.g. pulling in a person solely to click "close") is process theater that adds ritual without adding real independent judgment.
+- **Technical enforcement identical to #71/#72's close-gate Action** — rejected: unlike self-PR-approval or issue open/closed state, "was this session actually fresh-context" isn't observable from GitHub's API. The self-report line is the closest available signal, and is explicitly acknowledged as unenforceable — a good-faith convention, not a gate.
+
+## Consequences
+
+Every future `wayfinder:build`'s QA issue must show a fresh-context agent's evidence, including the self-report line, before it can close — and the agent, not the implementer, has closing authority when the checklist fully passes. CLAUDE.md:77 is rewritten to state this policy directly rather than list it as an open question. This decision is independent of the separate rename of "QA"/"quality assurance" terminology to "manual verification" (tracked in its own ticket) — that rename touches wording and the GitHub label only, not the independence mechanism described here.
