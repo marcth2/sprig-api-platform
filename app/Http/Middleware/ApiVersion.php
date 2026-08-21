@@ -41,7 +41,7 @@ class ApiVersion
         }
 
         $accept = $request->header('Accept', '');
-        if (is_string($accept) && preg_match('/application\/vnd\.[^.]+\.v(\d+)\+json/', $accept, $matches)) {
+        if (preg_match('/application\/vnd\.[^.]+\.v(\d+)\+json/', $accept, $matches)) {
             return $matches[1];
         }
 
