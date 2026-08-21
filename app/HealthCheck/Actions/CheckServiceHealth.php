@@ -45,7 +45,9 @@ class CheckServiceHealth
         path: '/api/health',
         operationId: 'getHealthAggregate',
         summary: 'All services health check',
-        description: 'Returns the health status of all registered services (app, mariadb, redis) as an aggregate. Responds 200 when every service is ok; responds 503 when one or more services are degraded or down. Use this endpoint in post-deploy readiness probes.',
+        description: 'Returns the health status of all registered services (app, mariadb, redis) as an aggregate.'
+            .' Responds 200 when every service is ok; responds 503 when one or more services are degraded or down.'
+            .' Use this endpoint in post-deploy readiness probes.',
         security: [['sanctum' => []]],
         tags: ['HealthCheck'],
         responses: [
@@ -60,9 +62,32 @@ class CheckServiceHealth
                             summary: 'All services healthy',
                             value: [
                                 'services' => [
-                                    ['service' => 'app', 'status' => 'ok', 'code' => 200, 'execution_time_ms' => 2, 'meta' => ['opcache_enabled' => true, 'debug_mode' => false, 'maintenance_mode' => false, 'memory_limit' => '128M']],
-                                    ['service' => 'mariadb', 'status' => 'ok', 'code' => 200, 'execution_time_ms' => 1, 'meta' => []],
-                                    ['service' => 'redis', 'status' => 'ok', 'code' => 200, 'execution_time_ms' => 1, 'meta' => []],
+                                    [
+                                        'service' => 'app',
+                                        'status' => 'ok',
+                                        'code' => 200,
+                                        'execution_time_ms' => 2,
+                                        'meta' => [
+                                            'opcache_enabled' => true,
+                                            'debug_mode' => false,
+                                            'maintenance_mode' => false,
+                                            'memory_limit' => '128M',
+                                        ],
+                                    ],
+                                    [
+                                        'service' => 'mariadb',
+                                        'status' => 'ok',
+                                        'code' => 200,
+                                        'execution_time_ms' => 1,
+                                        'meta' => [],
+                                    ],
+                                    [
+                                        'service' => 'redis',
+                                        'status' => 'ok',
+                                        'code' => 200,
+                                        'execution_time_ms' => 1,
+                                        'meta' => [],
+                                    ],
                                 ],
                                 'healthy' => true,
                                 'checked_at' => '2026-06-26T12:00:00+00:00',
@@ -87,9 +112,32 @@ class CheckServiceHealth
                             summary: 'MariaDB unreachable',
                             value: [
                                 'services' => [
-                                    ['service' => 'app', 'status' => 'ok', 'code' => 200, 'execution_time_ms' => 2, 'meta' => ['opcache_enabled' => true, 'debug_mode' => false, 'maintenance_mode' => false, 'memory_limit' => '128M']],
-                                    ['service' => 'mariadb', 'status' => 'down', 'code' => 503, 'execution_time_ms' => 2001, 'meta' => []],
-                                    ['service' => 'redis', 'status' => 'ok', 'code' => 200, 'execution_time_ms' => 1, 'meta' => []],
+                                    [
+                                        'service' => 'app',
+                                        'status' => 'ok',
+                                        'code' => 200,
+                                        'execution_time_ms' => 2,
+                                        'meta' => [
+                                            'opcache_enabled' => true,
+                                            'debug_mode' => false,
+                                            'maintenance_mode' => false,
+                                            'memory_limit' => '128M',
+                                        ],
+                                    ],
+                                    [
+                                        'service' => 'mariadb',
+                                        'status' => 'down',
+                                        'code' => 503,
+                                        'execution_time_ms' => 2001,
+                                        'meta' => [],
+                                    ],
+                                    [
+                                        'service' => 'redis',
+                                        'status' => 'ok',
+                                        'code' => 200,
+                                        'execution_time_ms' => 1,
+                                        'meta' => [],
+                                    ],
                                 ],
                                 'healthy' => false,
                                 'checked_at' => '2026-06-26T12:00:00+00:00',
@@ -104,7 +152,9 @@ class CheckServiceHealth
         path: '/api/health/{service}',
         operationId: 'getServiceHealth',
         summary: 'Single service health check',
-        description: 'Returns the health status of a single named service. Use for targeted diagnostics when a specific service appears unhealthy. The meta field carries service-specific detail (e.g. opcache state for app, connection latency for mariadb).',
+        description: 'Returns the health status of a single named service. Use for targeted diagnostics when a'
+            .' specific service appears unhealthy. The meta field carries service-specific detail (e.g. opcache'
+            .' state for app, connection latency for mariadb).',
         security: [['sanctum' => []]],
         tags: ['HealthCheck'],
         parameters: [
@@ -112,7 +162,8 @@ class CheckServiceHealth
                 name: 'service',
                 in: 'path',
                 required: true,
-                description: 'Name of the service to check. Valid values: app (Laravel application runtime), mariadb (primary database), redis (cache and session store). Returns 404 for any other value.',
+                description: 'Name of the service to check. Valid values: app (Laravel application runtime),'
+                    .' mariadb (primary database), redis (cache and session store). Returns 404 for any other value.',
                 schema: new OA\Schema(type: 'string', enum: ['app', 'mariadb', 'redis'])
             ),
         ],

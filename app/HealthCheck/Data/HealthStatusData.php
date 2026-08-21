@@ -20,16 +20,45 @@ use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 class HealthStatusData extends Data
 {
     public function __construct(
-        #[OA\Property(property: 'service', type: 'string', description: 'Service identifier (e.g. app, mariadb, redis).', example: 'redis')]
+        #[OA\Property(
+            property: 'service',
+            type: 'string',
+            description: 'Service identifier (e.g. app, mariadb, redis).',
+            example: 'redis',
+        )]
         public readonly string $service,
-        #[OA\Property(property: 'status', type: 'string', enum: ['ok', 'degraded', 'down'], description: '`ok` — fully operational. `degraded` — reachable but performing below expectations. `down` — unreachable or threw an exception.', example: 'ok')]
+        #[OA\Property(
+            property: 'status',
+            type: 'string',
+            enum: ['ok', 'degraded', 'down'],
+            description: '`ok` — fully operational. `degraded` — reachable but performing below expectations.'
+                .' `down` — unreachable or threw an exception.',
+            example: 'ok',
+        )]
         public readonly ServiceStatus $status,
-        #[OA\Property(property: 'code', type: 'integer', description: 'HTTP status code mirroring the response status (200 for ok, 503 for degraded or down).', example: 200)]
+        #[OA\Property(
+            property: 'code',
+            type: 'integer',
+            description: 'HTTP status code mirroring the response status (200 for ok, 503 for degraded or down).',
+            example: 200,
+        )]
         public readonly int $code,
-        #[OA\Property(property: 'execution_time_ms', type: 'integer', description: 'Time taken to perform the health check in milliseconds. Values above ~500 ms may indicate connection saturation.', example: 3)]
+        #[OA\Property(
+            property: 'execution_time_ms',
+            type: 'integer',
+            description: 'Time taken to perform the health check in milliseconds.'
+                .' Values above ~500 ms may indicate connection saturation.',
+            example: 3,
+        )]
         public readonly int $executionTimeMs,
         /** @var array<string, mixed> */
-        #[OA\Property(property: 'meta', type: 'object', description: 'Service-specific diagnostic data. For app: includes opcache_enabled, debug_mode, maintenance_mode, memory_limit. Empty object for services with no extra diagnostics.', additionalProperties: new OA\AdditionalProperties)]
+        #[OA\Property(
+            property: 'meta',
+            type: 'object',
+            description: 'Service-specific diagnostic data. For app: includes opcache_enabled, debug_mode,'
+                .' maintenance_mode, memory_limit. Empty object for services with no extra diagnostics.',
+            additionalProperties: new OA\AdditionalProperties,
+        )]
         public readonly array $meta = [],
     ) {}
 }

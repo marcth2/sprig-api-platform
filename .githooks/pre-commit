@@ -28,4 +28,9 @@ if ! docker compose exec -T app ./vendor/bin/phpstan analyse --memory-limit=-1 "
     status=1
 fi
 
+echo "pre-commit: phpcs ${staged[*]}"
+if ! docker compose exec -T app ./vendor/bin/phpcs "${staged[@]}"; then
+    status=1
+fi
+
 exit "$status"

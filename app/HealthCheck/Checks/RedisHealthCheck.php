@@ -27,9 +27,14 @@ class RedisHealthCheck implements HealthCheckInterface
             /** @var array<string, mixed> $info */
             $info = $connection->info();
 
-            $redisVersion = isset($info['redis_version']) && is_string($info['redis_version']) ? $info['redis_version'] : 'unknown';
-            $usedMemory = isset($info['used_memory']) && (is_string($info['used_memory']) || is_int($info['used_memory'])) ? (string) $info['used_memory'] : 'unknown';
-            $connectedClients = isset($info['connected_clients']) && is_numeric($info['connected_clients']) ? (int) $info['connected_clients'] : 0;
+            $hasVersion = isset($info['redis_version']) && is_string($info['redis_version']);
+            $redisVersion = $hasVersion ? $info['redis_version'] : 'unknown';
+
+            $hasMemory = is_string($info['used_memory'] ?? null) || is_int($info['used_memory'] ?? null);
+            $usedMemory = $hasMemory ? (string) $info['used_memory'] : 'unknown';
+
+            $hasClients = isset($info['connected_clients']) && is_numeric($info['connected_clients']);
+            $connectedClients = $hasClients ? (int) $info['connected_clients'] : 0;
 
             $ms = intdiv(hrtime(true) - $start, 1_000_000);
 

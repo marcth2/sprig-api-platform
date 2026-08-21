@@ -160,7 +160,8 @@ return [
              */
             'processors' => [
                 // \App\SwaggerProcessors\SchemaQueryParameter::class,
-                // ['class' => \App\SwaggerProcessors\Custom::class, 'after' => \OpenApi\Processors\AugmentSchemas::class],
+                // ['class' => \App\SwaggerProcessors\Custom::class,
+                //     'after' => \OpenApi\Processors\AugmentSchemas::class],
             ],
 
             /**
@@ -181,7 +182,10 @@ return [
              * Allows to generate specs either for OpenAPI 3.0.0 or OpenAPI 3.1.0.
              * By default the spec will be in version 3.0.0
              */
-            'open_api_spec_version' => env('L5_SWAGGER_OPEN_API_SPEC_VERSION', Generator::OPEN_API_DEFAULT_SPEC_VERSION),
+            'open_api_spec_version' => env(
+                'L5_SWAGGER_OPEN_API_SPEC_VERSION',
+                Generator::OPEN_API_DEFAULT_SPEC_VERSION
+            ),
         ],
 
         /*
@@ -194,17 +198,17 @@ return [
                  */
                 /*
                 'api_key_security_example' => [ // Unique name of security
-                    'type' => 'apiKey', // The type of the security scheme. Valid values are "basic", "apiKey" or "oauth2".
+                    'type' => 'apiKey', // Valid values are "basic", "apiKey" or "oauth2".
                     'description' => 'A short description for security scheme',
                     'name' => 'api_key', // The name of the header or query parameter to be used.
                     'in' => 'header', // The location of the API key. Valid values are "query" or "header".
                 ],
                 'oauth2_security_example' => [ // Unique name of security
-                    'type' => 'oauth2', // The type of the security scheme. Valid values are "basic", "apiKey" or "oauth2".
+                    'type' => 'oauth2', // Valid values are "basic", "apiKey" or "oauth2".
                     'description' => 'A short description for oauth2 security scheme.',
-                    'flow' => 'implicit', // The flow used by the OAuth2 security scheme. Valid values are "implicit", "password", "application" or "accessCode".
-                    'authorizationUrl' => 'http://example.com/auth', // The authorization URL to be used for (implicit/accessCode)
-                    //'tokenUrl' => 'http://example.com/auth' // The authorization URL to be used for (password/application/accessCode)
+                    'flow' => 'implicit', // Valid values are "implicit", "password", "application" or "accessCode".
+                    'authorizationUrl' => 'http://example.com/auth', // Used for (implicit/accessCode)
+                    //'tokenUrl' => 'http://example.com/auth' // Used for (password/application/accessCode)
                     'scopes' => [
                         'read:projects' => 'read your projects',
                         'write:projects' => 'modify projects in your account',

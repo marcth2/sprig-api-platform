@@ -12,10 +12,11 @@ use Symfony\Component\Yaml\Yaml;
 class AuditOpenApiSpec extends Command
 {
     protected $signature = 'l5-swagger:audit
-        {--fail-on-warnings : Exit non-zero when warnings (incomplete annotations, routes missing api middleware) are found}
+        {--fail-on-warnings : Exit non-zero on warnings (incomplete annotations, missing api middleware)}
         {--spec-file= : Path to OpenAPI spec file (defaults to configured l5-swagger output)}';
 
-    protected $description = 'Audit OpenAPI spec — detect undocumented routes, phantom paths, routes missing api middleware, and incomplete annotations';
+    protected $description = 'Audit OpenAPI spec — undocumented routes, phantom paths,'
+        .' routes missing api middleware, incomplete annotations';
 
     public function handle(): int
     {
@@ -72,7 +73,10 @@ class AuditOpenApiSpec extends Command
                 ['Spec paths', (string) count($specPaths)],
                 ['Undocumented routes', '0'],
                 ['Phantom spec paths', '0'],
-                ['Routes missing api middleware', count($missingApiMiddleware) > 0 ? count($missingApiMiddleware).' warning(s)' : '0'],
+                [
+                    'Routes missing api middleware',
+                    count($missingApiMiddleware) > 0 ? count($missingApiMiddleware).' warning(s)' : '0',
+                ],
                 ['Incomplete annotations', count($incomplete) > 0 ? count($incomplete).' warning(s)' : '0'],
             ]
         );
@@ -265,7 +269,8 @@ class AuditOpenApiSpec extends Command
             if ($operationId === null || $operationId === '') {
                 $routeIssues[] = 'missing operationId';
             } elseif (($operationIdCounts[$operationId] ?? 0) > 1) {
-                $routeIssues[] = "duplicate operationId '{$operationId}' (used by {$operationIdCounts[$operationId]} operations)";
+                $count = $operationIdCounts[$operationId];
+                $routeIssues[] = "duplicate operationId '{$operationId}' (used by {$count} operations)";
             }
 
             if ($this->routeHasSanctum($route['middleware'])) {
