@@ -72,6 +72,25 @@ class ApplicationHealthCheckTest extends TestCase
     /**
      * @runInSeparateProcess
      */
+    public function test_check_does_not_degrade_debug_or_opcache_in_local_env(): void
+    {
+        // isLocal() guards debug_enabled/opcache_disabled from firing in local dev,
+        // where both are commonly true/off by default. Never exercised before: every
+        // other test here runs under APP_ENV=testing, so this guard's true-branch
+        // (isLocal() === true) had 100% line coverage but zero real execution.
+        config(['app.debug' => true]);
+        app()->instance('env', 'local');
+        ini_set('opcache.enable', '0');
+
+        $result = (new ApplicationHealthCheck)->check();
+
+        $this->assertNotContains('debug_enabled', $result->meta['degraded_reasons']);
+        $this->assertNotContains('opcache_disabled', $result->meta['degraded_reasons']);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
     public function test_check_returns_degraded_when_opcache_disabled_in_non_local_env(): void
     {
         // Runs in a separate process so that ini_set cannot bleed into other tests.
