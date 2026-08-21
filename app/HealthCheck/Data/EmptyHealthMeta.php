@@ -10,8 +10,10 @@ use Spatie\LaravelData\Data;
 
 #[OA\Schema(
     schema: 'EmptyHealthMeta',
-    description: 'No service-specific diagnostic data. Used for the down/failure path, and for any service with'
-        .' nothing extra to report.',
+    description: <<<'TEXT'
+        No service-specific diagnostic data. Used for the down/failure path, and for any service with
+        nothing extra to report.
+        TEXT,
     type: 'object',
 )]
 class EmptyHealthMeta extends Data implements HealthCheckMetaData {}

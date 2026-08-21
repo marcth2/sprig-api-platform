@@ -32,8 +32,10 @@ class HealthStatusData extends Data
             property: 'status',
             type: 'string',
             enum: ['ok', 'degraded', 'down'],
-            description: '`ok` — fully operational. `degraded` — reachable but performing below expectations.'
-                .' `down` — unreachable or threw an exception.',
+            description: <<<'TEXT'
+                `ok` — fully operational. `degraded` — reachable but performing below expectations.
+                `down` — unreachable or threw an exception.
+                TEXT,
             example: 'ok',
         )]
         public readonly ServiceStatus $status,
@@ -47,17 +49,21 @@ class HealthStatusData extends Data
         #[OA\Property(
             property: 'execution_time_ms',
             type: 'integer',
-            description: 'Time taken to perform the health check in milliseconds.'
-                .' Values above ~500 ms may indicate connection saturation.',
+            description: <<<'TEXT'
+                Time taken to perform the health check in milliseconds.
+                Values above ~500 ms may indicate connection saturation.
+                TEXT,
             example: 3,
         )]
         public readonly int $executionTimeMs,
         #[OA\Property(
             property: 'meta',
             type: 'object',
-            description: 'Service-specific diagnostic data. Empty for services with no extra diagnostics; see'
-                .' AppHealthMeta, MariadbHealthMeta, and RedisHealthMeta in the OpenAPI schema components for the'
-                .' shape each service produces.',
+            description: <<<'TEXT'
+                Service-specific diagnostic data. Empty for services with no extra diagnostics; see
+                AppHealthMeta, MariadbHealthMeta, and RedisHealthMeta in the OpenAPI schema components for the
+                shape each service produces.
+                TEXT,
             additionalProperties: new OA\AdditionalProperties,
         )]
         public readonly HealthCheckMetaData $meta = new EmptyHealthMeta,

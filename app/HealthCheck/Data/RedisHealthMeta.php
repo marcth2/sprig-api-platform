@@ -29,8 +29,10 @@ class RedisHealthMeta extends Data implements HealthCheckMetaData
         #[OA\Property(
             property: 'used_memory',
             type: 'string',
-            description: 'Used memory in bytes, as reported by `INFO` (kept as a string to match Redis\'s own'
-                .' representation).',
+            description: <<<'TEXT'
+                Used memory in bytes, as reported by `INFO` (kept as a string to match Redis's own
+                representation).
+                TEXT,
             example: '1048576'
         )]
         public readonly string $usedMemory,
