@@ -34,7 +34,7 @@ jobs:
             );
 
             const violations = [];
-            let qaChildClosed = false;
+            let verificationChildClosed = false;
 
             for (const child of children) {
               const childLabels = child.labels.map(l => l.name);
@@ -44,8 +44,8 @@ jobs:
                 continue;
               }
 
-              if (isBuild && childLabels.includes('quality assurance')) {
-                qaChildClosed = true;
+              if (isBuild && childLabels.includes('verification')) {
+                verificationChildClosed = true;
               }
 
               if (isPortfolio && childLabels.includes('wayfinder:task')) {
@@ -69,8 +69,8 @@ jobs:
               }
             }
 
-            if (isBuild && children.length > 0 && !qaChildClosed) {
-              violations.push(`- no child carries the \`quality assurance\` label and is closed (a build wayfinder requires a QA issue anchored to the final commit SHA)`);
+            if (isBuild && children.length > 0 && !verificationChildClosed) {
+              violations.push(`- no child carries the \`verification\` label and is closed (a build wayfinder requires a verification issue anchored to the final commit SHA)`);
             }
 
             if (violations.length === 0) {
