@@ -127,7 +127,7 @@ class CheckServiceHealthTest extends TestCase
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->andReturn(
                 new HealthStatusData('app', ServiceStatus::Ok, 200, 1, [
-                    'api_version' => config('api.version'),
+                    'app_version' => config('app.version'),
                     'php_version' => PHP_VERSION,
                     'framework_version' => app()->version(),
                     'environment' => 'testing',
@@ -142,7 +142,7 @@ class CheckServiceHealthTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('service', 'app')
             ->assertJsonStructure([
-                'meta' => ['api_version', 'php_version', 'environment'],
+                'meta' => ['app_version', 'php_version', 'environment'],
             ]);
     }
 }
