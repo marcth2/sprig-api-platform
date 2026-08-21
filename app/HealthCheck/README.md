@@ -33,7 +33,7 @@ Service liveness and readiness checks for all registered infrastructure dependen
 
 ## Authentication
 
-These endpoints require a Sanctum Bearer token. In local development, generate one via Artisan tinker.
+These endpoints require a Sanctum Bearer token. In local development, generate one via the `user:token` Artisan command.
 
 ### Create a test user (first time only)
 
@@ -45,8 +45,13 @@ docker compose exec app php artisan tinker --execute \
 ### Generate a Bearer token
 
 ```bash
-docker compose exec app php artisan tinker --execute \
-  'echo \App\Models\User::first()->createToken("dev")->plainTextToken;'
+docker compose exec app php artisan user:token
+```
+
+Pass an email to target a specific user instead of the first one in the table:
+
+```bash
+docker compose exec app php artisan user:token dev@example.com
 ```
 
 Copy the printed token and export it for use in curl commands:
