@@ -14,3 +14,5 @@ Usage: `/issue <issue-number>`
 5. Do the work described in the issue body. Use `/ship` when it's ready to commit, push, and open the pull request (`Closes #<issue-number>`, targeting `master`).
 
 This project has no `.omc/plans/` convention — issues are the persistent record of scope, created ahead of time under the relevant tracking issue.
+
+`<issue-number>-<slug>` applies to wayfinder-tracked work. Standalone work requested directly outside the wayfinder system may use a descriptive branch name instead (precedent: PR #102).
