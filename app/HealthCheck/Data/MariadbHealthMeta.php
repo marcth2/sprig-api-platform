@@ -26,6 +26,7 @@ class MariadbHealthMeta extends Data implements HealthCheckMetaData
             example: '10.11.0-MariaDB'
         )]
         public readonly string $version,
+
         #[OA\Property(
             property: 'max_connections',
             type: 'integer',
@@ -33,6 +34,7 @@ class MariadbHealthMeta extends Data implements HealthCheckMetaData
             example: 151
         )]
         public readonly int $maxConnections,
+
         #[OA\Property(
             property: 'threads_connected',
             type: 'integer',

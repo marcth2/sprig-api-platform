@@ -7,6 +7,7 @@ namespace App\HealthCheck\Checks;
 use App\HealthCheck\Contracts\HealthCheckInterface;
 use App\HealthCheck\Data\AppHealthMeta;
 use App\HealthCheck\Data\HealthStatusData;
+use App\HealthCheck\Data\PhpIniData;
 use App\HealthCheck\Enums\ServiceStatus;
 
 class ApplicationHealthCheck implements HealthCheckInterface
@@ -60,12 +61,12 @@ class ApplicationHealthCheck implements HealthCheckInterface
             environment: app()->environment(),
             maintenanceMode: app()->isDownForMaintenance(),
             degradedReasons: $degraded,
-            phpIni: [
-                'memory_limit' => ini_get('memory_limit'),
-                'max_execution_time' => ini_get('max_execution_time'),
-                'post_max_size' => $postMaxSize,
-                'opcache_enabled' => (bool) ini_get('opcache.enable'),
-            ],
+            phpIni: new PhpIniData(
+                memoryLimit: ini_get('memory_limit'),
+                maxExecutionTime: ini_get('max_execution_time'),
+                postMaxSize: $postMaxSize,
+                opcacheEnabled: (bool) ini_get('opcache.enable'),
+            ),
         ));
     }
 

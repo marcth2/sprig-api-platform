@@ -6,6 +6,7 @@ namespace Tests\Unit\HealthCheck;
 
 use App\HealthCheck\Checks\ApplicationHealthCheck;
 use App\HealthCheck\Data\AppHealthMeta;
+use App\HealthCheck\Data\PhpIniData;
 use App\HealthCheck\Enums\ServiceStatus;
 use Tests\TestCase;
 
@@ -20,15 +21,15 @@ class ApplicationHealthCheckTest extends TestCase
         $this->assertSame(200, $result->code);
     }
 
-    public function test_check_meta_is_app_health_meta_with_php_ini_keys(): void
+    public function test_check_meta_is_app_health_meta_with_php_ini(): void
     {
         $result = (new ApplicationHealthCheck)->check();
 
         $this->assertInstanceOf(AppHealthMeta::class, $result->meta);
-        $this->assertArrayHasKey('memory_limit', $result->meta->phpIni);
-        $this->assertArrayHasKey('max_execution_time', $result->meta->phpIni);
-        $this->assertArrayHasKey('post_max_size', $result->meta->phpIni);
-        $this->assertArrayHasKey('opcache_enabled', $result->meta->phpIni);
+        $this->assertInstanceOf(PhpIniData::class, $result->meta->phpIni);
+        $this->assertSame(ini_get('memory_limit'), $result->meta->phpIni->memoryLimit);
+        $this->assertSame(ini_get('max_execution_time'), $result->meta->phpIni->maxExecutionTime);
+        $this->assertSame((bool) ini_get('opcache.enable'), $result->meta->phpIni->opcacheEnabled);
     }
 
     public function test_check_meta_app_version_matches_config(): void

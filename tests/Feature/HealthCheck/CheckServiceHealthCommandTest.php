@@ -6,6 +6,7 @@ namespace Tests\Feature\HealthCheck;
 
 use App\HealthCheck\Data\AppHealthMeta;
 use App\HealthCheck\Data\HealthStatusData;
+use App\HealthCheck\Data\PhpIniData;
 use App\HealthCheck\Enums\ServiceStatus;
 use App\HealthCheck\Services\HealthCheckerService;
 use Tests\TestCase;
@@ -47,12 +48,12 @@ class CheckServiceHealthCommandTest extends TestCase
                     environment: 'local',
                     maintenanceMode: false,
                     degradedReasons: [],
-                    phpIni: [
-                        'memory_limit' => '128M',
-                        'max_execution_time' => '30',
-                        'post_max_size' => '8M',
-                        'opcache_enabled' => true,
-                    ],
+                    phpIni: new PhpIniData(
+                        memoryLimit: '128M',
+                        maxExecutionTime: '30',
+                        postMaxSize: '8M',
+                        opcacheEnabled: true,
+                    ),
                 ))
             );
         });
