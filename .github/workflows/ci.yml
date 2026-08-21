@@ -111,6 +111,13 @@ jobs:
             sprig-api-platform-ci:latest \
             composer format -- --test
 
+      - name: Run PHPCS
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/var/www/html \
+            sprig-api-platform-ci:latest \
+            composer lint
+
       - name: Generate OpenAPI spec
         run: |
           docker run --rm \

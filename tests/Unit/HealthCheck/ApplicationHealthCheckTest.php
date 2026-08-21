@@ -42,7 +42,12 @@ class ApplicationHealthCheckTest extends TestCase
     public function test_check_returns_degraded_when_in_maintenance_mode(): void
     {
         $downFile = storage_path('framework/down');
-        file_put_contents($downFile, json_encode(['secret' => null, 'message' => 'test', 'status' => 503, 'template' => null]));
+        file_put_contents($downFile, json_encode([
+            'secret' => null,
+            'message' => 'test',
+            'status' => 503,
+            'template' => null,
+        ]));
 
         try {
             $result = (new ApplicationHealthCheck)->check();

@@ -47,28 +47,29 @@ This is the mandatory convention for every domain added to this codebase, includ
 
 ## Validation Gate
 
-Run before marking any implementation task complete. All five gates must pass:
+Run before marking any implementation task complete. All six gates must pass:
 
 ```bash
 docker compose exec app composer test
 docker compose exec app composer analyse
 docker compose exec app composer format -- --test
+docker compose exec app composer lint
 docker compose exec app php artisan l5-swagger:generate
 docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 ```
 
-`composer test` runs the full suite with `--coverage --min=100`. `composer analyse` runs PHPStan at level max, via `larastan/larastan` for Laravel-aware type inference (Eloquent, facades, container resolution), with no baseline. `composer format -- --test` runs Pint in dry-run mode; drop `-- --test` to auto-fix. `l5-swagger:generate` regenerates the OpenAPI spec from annotations. `l5-swagger:audit` (a custom command in `app/Console/Commands/AuditOpenApiSpec.php`) fails on undocumented routes, phantom spec paths, or incomplete annotations.
+`composer test` runs the full suite with `--coverage --min=100`. `composer analyse` runs PHPStan at level max, via `larastan/larastan` for Laravel-aware type inference (Eloquent, facades, container resolution), with no baseline. `composer format -- --test` runs Pint in dry-run mode; drop `-- --test` to auto-fix. `composer lint` runs PHP_CodeSniffer against `phpcs.xml`, which enables only `Generic.Files.LineLength` (120 chars) — scoped narrowly because full PSR-12 would actively fight Pint's `laravel` preset on style rules the two tools don't agree on byte-for-byte (import ordering, blank-line placement). `l5-swagger:generate` regenerates the OpenAPI spec from annotations. `l5-swagger:audit` (a custom command in `app/Console/Commands/AuditOpenApiSpec.php`) fails on undocumented routes, phantom spec paths, or incomplete annotations.
 
 **PHPStan escape hatch:** if level-max friction ever becomes real (a violation that isn't a genuine bug and can't be resolved by narrowing types further), suppress it inline with `@phpstan-ignore-line` plus a mandatory one-line justification comment explaining why — reviewed per-occurrence in the PR diff that introduces it. Never add a bulk `phpstan-baseline.neon`: it freezes an entire snapshot of errors with no per-occurrence review or stated reason. `phpstan.neon` sets `reportUnmatchedIgnoredErrors: true`, so a suppression that no longer matches any error fails CI instead of silently accumulating. Decided in [#69](https://github.com/marcth2/sprig-api-platform/issues/69) — see map #39's "Decisions so far" for the reasoning.
 
-`.github/workflows/ci.yml` runs the same five gates on every push/PR against `master`, using the Dockerfile's `ci` build target (PCOV-enabled).
+`.github/workflows/ci.yml` runs the same six gates on every push/PR against `master`, using the Dockerfile's `ci` build target (PCOV-enabled).
 
 ---
 
 ## Conventions for Agentic Work
 
 - **All PHP commands:** run via `docker compose exec app` (no native PHP on host)
-- **Pre-commit hook:** `.githooks/pre-commit` runs Pint + PHPStan on staged PHP files. `composer setup` wires it in via `git config core.hooksPath .githooks` — a checkout that skips `composer setup` must run that command manually
+- **Pre-commit hook:** `.githooks/pre-commit` runs Pint + PHPStan + PHPCS on staged PHP files. `composer setup` wires it in via `git config core.hooksPath .githooks` — a checkout that skips `composer setup` must run that command manually
 - **Trunk-based git:** a single `master` branch, no `develop`. Never commit directly to `master` — create a branch, commit there, push, open a PR targeting `master`, and merge
 - **Branch protection:** `master`'s ruleset requires a PR (0 required approvals — a review requirement is structurally unsatisfiable for a solo maintainer, since GitHub blocks self-approval regardless of CODEOWNERS; keeping one at 1 just forces every merge through admin bypass) and requires the `ci` status check (from `.github/workflows/ci.yml`) to pass, with branches kept up to date before merging. Also restricts deletions, requires linear history, and blocks force pushes. Not scriptable — the branch-protection/rulesets API is Pro/Team-gated for private repos, so changes are made manually in GitHub Settings. Revisit the 0-approvals call once a second contributor exists. Decided in [#76](https://github.com/marcth2/sprig-api-platform/issues/76)
 - **No AI attribution:** never include AI-attribution text (e.g. "Generated with Claude Code") in commit messages, PR descriptions, or GitHub issues
@@ -94,4 +95,4 @@ docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 
 ---
 
-_Last updated: 2026-08-21 (Adopted Larastan for PHPStan analysis and documented the inline-ignore escape-hatch convention, #69)_
+_Last updated: 2026-08-21 (Added a 120-character line-length gate via PHP_CodeSniffer, #107)_
