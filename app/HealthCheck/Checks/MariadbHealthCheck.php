@@ -6,6 +6,7 @@ namespace App\HealthCheck\Checks;
 
 use App\HealthCheck\Contracts\HealthCheckInterface;
 use App\HealthCheck\Data\HealthStatusData;
+use App\HealthCheck\Data\MariadbHealthMeta;
 use App\HealthCheck\Enums\ServiceStatus;
 use Illuminate\Support\Facades\DB;
 
@@ -38,11 +39,11 @@ class MariadbHealthCheck implements HealthCheckInterface
 
             $ms = intdiv(hrtime(true) - $start, 1_000_000);
 
-            return new HealthStatusData('mariadb', ServiceStatus::Ok, 200, $ms, [
-                'version' => $version,
-                'max_connections' => $maxConnections,
-                'threads_connected' => $threadsConnected,
-            ]);
+            return new HealthStatusData('mariadb', ServiceStatus::Ok, 200, $ms, new MariadbHealthMeta(
+                version: $version,
+                maxConnections: $maxConnections,
+                threadsConnected: $threadsConnected,
+            ));
         } catch (\Exception) {
             $ms = intdiv(hrtime(true) - $start, 1_000_000);
 

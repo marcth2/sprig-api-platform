@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\HealthCheck;
 
 use App\HealthCheck\Checks\ApplicationHealthCheck;
+use App\HealthCheck\Data\AppHealthMeta;
 use App\HealthCheck\Enums\ServiceStatus;
 use Tests\TestCase;
 
@@ -19,24 +20,22 @@ class ApplicationHealthCheckTest extends TestCase
         $this->assertSame(200, $result->code);
     }
 
-    public function test_check_meta_contains_required_keys(): void
+    public function test_check_meta_is_app_health_meta_with_php_ini_keys(): void
     {
         $result = (new ApplicationHealthCheck)->check();
 
-        $this->assertArrayHasKey('app_version', $result->meta);
-        $this->assertArrayHasKey('php_version', $result->meta);
-        $this->assertArrayHasKey('framework_version', $result->meta);
-        $this->assertArrayHasKey('environment', $result->meta);
-        $this->assertArrayHasKey('maintenance_mode', $result->meta);
-        $this->assertArrayHasKey('degraded_reasons', $result->meta);
-        $this->assertArrayHasKey('php_ini', $result->meta);
+        $this->assertInstanceOf(AppHealthMeta::class, $result->meta);
+        $this->assertArrayHasKey('memory_limit', $result->meta->phpIni);
+        $this->assertArrayHasKey('max_execution_time', $result->meta->phpIni);
+        $this->assertArrayHasKey('post_max_size', $result->meta->phpIni);
+        $this->assertArrayHasKey('opcache_enabled', $result->meta->phpIni);
     }
 
     public function test_check_meta_app_version_matches_config(): void
     {
         $result = (new ApplicationHealthCheck)->check();
 
-        $this->assertSame(config('app.version'), $result->meta['app_version']);
+        $this->assertSame((string) config('app.version'), $result->meta->appVersion);
     }
 
     public function test_check_returns_degraded_when_in_maintenance_mode(): void
@@ -54,7 +53,7 @@ class ApplicationHealthCheckTest extends TestCase
 
             $this->assertSame(ServiceStatus::Degraded, $result->status);
             $this->assertSame(503, $result->code);
-            $this->assertContains('maintenance_mode', $result->meta['degraded_reasons']);
+            $this->assertContains('maintenance_mode', $result->meta->degradedReasons);
         } finally {
             if (file_exists($downFile)) {
                 unlink($downFile);
@@ -70,7 +69,7 @@ class ApplicationHealthCheckTest extends TestCase
 
         $result = (new ApplicationHealthCheck)->check();
 
-        $this->assertContains('debug_enabled', $result->meta['degraded_reasons']);
+        $this->assertContains('debug_enabled', $result->meta->degradedReasons);
         $this->assertSame(ServiceStatus::Degraded, $result->status);
     }
 
@@ -89,8 +88,8 @@ class ApplicationHealthCheckTest extends TestCase
 
         $result = (new ApplicationHealthCheck)->check();
 
-        $this->assertNotContains('debug_enabled', $result->meta['degraded_reasons']);
-        $this->assertNotContains('opcache_disabled', $result->meta['degraded_reasons']);
+        $this->assertNotContains('debug_enabled', $result->meta->degradedReasons);
+        $this->assertNotContains('opcache_disabled', $result->meta->degradedReasons);
     }
 
     /**
@@ -104,7 +103,7 @@ class ApplicationHealthCheckTest extends TestCase
 
         $result = (new ApplicationHealthCheck)->check();
 
-        $this->assertContains('opcache_disabled', $result->meta['degraded_reasons']);
+        $this->assertContains('opcache_disabled', $result->meta->degradedReasons);
     }
 
     public function test_check_returns_degraded_when_memory_limit_low(): void
@@ -115,7 +114,7 @@ class ApplicationHealthCheckTest extends TestCase
         try {
             $result = (new ApplicationHealthCheck)->check();
 
-            $this->assertContains('memory_limit_low', $result->meta['degraded_reasons']);
+            $this->assertContains('memory_limit_low', $result->meta->degradedReasons);
         } finally {
             ini_set('memory_limit', $original !== false ? $original : '128M');
         }
@@ -130,7 +129,7 @@ class ApplicationHealthCheckTest extends TestCase
             $result = (new ApplicationHealthCheck)->check();
 
             // Unlimited memory (-1) should never add memory_limit_low
-            $this->assertNotContains('memory_limit_low', $result->meta['degraded_reasons']);
+            $this->assertNotContains('memory_limit_low', $result->meta->degradedReasons);
             $this->assertSame('app', $result->service);
         } finally {
             ini_set('memory_limit', $original !== false ? $original : '128M');
@@ -146,7 +145,7 @@ class ApplicationHealthCheckTest extends TestCase
             $result = (new ApplicationHealthCheck)->check();
 
             // 2G = 2048MB — well above MIN_MEMORY_LIMIT_MB
-            $this->assertNotContains('memory_limit_low', $result->meta['degraded_reasons']);
+            $this->assertNotContains('memory_limit_low', $result->meta->degradedReasons);
             $this->assertSame('app', $result->service);
         } finally {
             ini_set('memory_limit', $original !== false ? $original : '128M');

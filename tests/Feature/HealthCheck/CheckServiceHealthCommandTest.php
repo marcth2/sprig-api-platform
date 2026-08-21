@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\HealthCheck;
 
+use App\HealthCheck\Data\AppHealthMeta;
 use App\HealthCheck\Data\HealthStatusData;
 use App\HealthCheck\Enums\ServiceStatus;
 use App\HealthCheck\Services\HealthCheckerService;
@@ -15,9 +16,9 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkAll')->once()->andReturn([
-                new HealthStatusData('laravel', ServiceStatus::Ok, 200, 1, []),
-                new HealthStatusData('mariadb', ServiceStatus::Ok, 200, 2, []),
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 3, []),
+                new HealthStatusData('laravel', ServiceStatus::Ok, 200, 1),
+                new HealthStatusData('mariadb', ServiceStatus::Ok, 200, 2),
+                new HealthStatusData('redis', ServiceStatus::Ok, 200, 3),
             ]);
         });
 
@@ -28,7 +29,7 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('redis')->once()->andReturn(
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2, [])
+                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2)
             );
         });
 
@@ -39,11 +40,20 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->once()->andReturn(
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1, [
-                    'app_version' => config('app.version'),
-                    'environment' => 'local',
-                    'php_ini' => ['opcache_enabled' => true],
-                ])
+                new HealthStatusData('app', ServiceStatus::Ok, 200, 1, new AppHealthMeta(
+                    appVersion: (string) config('app.version'),
+                    phpVersion: PHP_VERSION,
+                    frameworkVersion: app()->version(),
+                    environment: 'local',
+                    maintenanceMode: false,
+                    degradedReasons: [],
+                    phpIni: [
+                        'memory_limit' => '128M',
+                        'max_execution_time' => '30',
+                        'post_max_size' => '8M',
+                        'opcache_enabled' => true,
+                    ],
+                ))
             );
         });
 
@@ -57,7 +67,7 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('redis')->once()->andReturn(
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2, [])
+                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2)
             );
         });
 
@@ -77,9 +87,9 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkAll')->once()->andReturn([
-                new HealthStatusData('laravel', ServiceStatus::Ok, 200, 1, []),
-                new HealthStatusData('mariadb', ServiceStatus::Down, 503, 2, []),
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 3, []),
+                new HealthStatusData('laravel', ServiceStatus::Ok, 200, 1),
+                new HealthStatusData('mariadb', ServiceStatus::Down, 503, 2),
+                new HealthStatusData('redis', ServiceStatus::Ok, 200, 3),
             ]);
         });
 
@@ -90,7 +100,7 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('mariadb')->once()->andReturn(
-                new HealthStatusData('mariadb', ServiceStatus::Down, 503, 2, [])
+                new HealthStatusData('mariadb', ServiceStatus::Down, 503, 2)
             );
         });
 
@@ -101,7 +111,7 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->once()->andReturn(
-                new HealthStatusData('app', ServiceStatus::Degraded, 200, 1, [])
+                new HealthStatusData('app', ServiceStatus::Degraded, 200, 1)
             );
         });
 
