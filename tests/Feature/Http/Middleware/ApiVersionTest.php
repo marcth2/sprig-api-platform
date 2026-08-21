@@ -19,7 +19,7 @@ class ApiVersionTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->andReturn(
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1, [])
+                new HealthStatusData('app', ServiceStatus::Ok, 200, 1)
             );
         });
 
@@ -35,7 +35,7 @@ class ApiVersionTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->andReturn(
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1, [])
+                new HealthStatusData('app', ServiceStatus::Ok, 200, 1)
             );
         });
 
@@ -61,7 +61,7 @@ class ApiVersionTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->andReturn(
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1, [])
+                new HealthStatusData('app', ServiceStatus::Ok, 200, 1)
             );
         });
 

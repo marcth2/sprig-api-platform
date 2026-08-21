@@ -35,9 +35,9 @@ class MariadbHealthCheckTest extends TestCase
 
         $this->assertSame(ServiceStatus::Ok, $result->status);
         $this->assertSame('mariadb', $result->service);
-        $this->assertSame('10.11.0-MariaDB', $result->meta['version']);
-        $this->assertSame(100, $result->meta['max_connections']);
-        $this->assertSame(3, $result->meta['threads_connected']);
+        $this->assertSame('10.11.0-MariaDB', $result->meta->version);
+        $this->assertSame(100, $result->meta->maxConnections);
+        $this->assertSame(3, $result->meta->threadsConnected);
     }
 
     public function test_check_returns_down_when_connection_fails(): void
@@ -58,8 +58,8 @@ class MariadbHealthCheckTest extends TestCase
         $this->assertSame('mariadb', $result->service);
         $this->assertSame(ServiceStatus::Ok, $result->status);
         $this->assertSame(200, $result->code);
-        $this->assertStringContainsString('MariaDB', $result->meta['version']);
-        $this->assertGreaterThan(0, $result->meta['max_connections']);
-        $this->assertGreaterThanOrEqual(1, $result->meta['threads_connected']);
+        $this->assertStringContainsString('MariaDB', $result->meta->version);
+        $this->assertGreaterThan(0, $result->meta->maxConnections);
+        $this->assertGreaterThanOrEqual(1, $result->meta->threadsConnected);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\HealthCheck\Checks;
 
 use App\HealthCheck\Contracts\HealthCheckInterface;
+use App\HealthCheck\Data\AppHealthMeta;
 use App\HealthCheck\Data\HealthStatusData;
 use App\HealthCheck\Enums\ServiceStatus;
 
@@ -21,7 +22,7 @@ class ApplicationHealthCheck implements HealthCheckInterface
     {
         $start = hrtime(true);
 
-        /** @var string[] $degraded */
+        /** @var list<string> $degraded */
         $degraded = [];
 
         if (app()->isDownForMaintenance()) {
@@ -46,20 +47,26 @@ class ApplicationHealthCheck implements HealthCheckInterface
         $code = $status === ServiceStatus::Ok ? 200 : 503;
         $ms = intdiv(hrtime(true) - $start, 1_000_000);
 
-        return new HealthStatusData('app', $status, $code, $ms, [
-            'app_version' => config('app.version'),
-            'php_version' => PHP_VERSION,
-            'framework_version' => app()->version(),
-            'environment' => app()->environment(),
-            'maintenance_mode' => app()->isDownForMaintenance(),
-            'degraded_reasons' => $degraded,
-            'php_ini' => [
+        $appVersion = config('app.version');
+        $appVersion = is_string($appVersion) ? $appVersion : '0.0.0-unversioned';
+
+        $postMaxSize = ini_get('post_max_size');
+        $postMaxSize = is_string($postMaxSize) ? $postMaxSize : '';
+
+        return new HealthStatusData('app', $status, $code, $ms, new AppHealthMeta(
+            appVersion: $appVersion,
+            phpVersion: PHP_VERSION,
+            frameworkVersion: app()->version(),
+            environment: app()->environment(),
+            maintenanceMode: app()->isDownForMaintenance(),
+            degradedReasons: $degraded,
+            phpIni: [
                 'memory_limit' => ini_get('memory_limit'),
                 'max_execution_time' => ini_get('max_execution_time'),
-                'post_max_size' => ini_get('post_max_size'),
+                'post_max_size' => $postMaxSize,
                 'opcache_enabled' => (bool) ini_get('opcache.enable'),
             ],
-        ]);
+        ));
     }
 
     private function parseMemoryLimitMb(string $memoryLimit): ?int

@@ -68,10 +68,18 @@ class CheckServiceHealth
                                         'code' => 200,
                                         'execution_time_ms' => 2,
                                         'meta' => [
-                                            'opcache_enabled' => true,
-                                            'debug_mode' => false,
+                                            'app_version' => '1.2.0',
+                                            'php_version' => '8.4.0',
+                                            'framework_version' => '13.25.0',
+                                            'environment' => 'production',
                                             'maintenance_mode' => false,
-                                            'memory_limit' => '128M',
+                                            'degraded_reasons' => [],
+                                            'php_ini' => [
+                                                'memory_limit' => '128M',
+                                                'max_execution_time' => '30',
+                                                'post_max_size' => '8M',
+                                                'opcache_enabled' => true,
+                                            ],
                                         ],
                                     ],
                                     [
@@ -79,14 +87,22 @@ class CheckServiceHealth
                                         'status' => 'ok',
                                         'code' => 200,
                                         'execution_time_ms' => 1,
-                                        'meta' => [],
+                                        'meta' => [
+                                            'version' => '10.11.0-MariaDB',
+                                            'max_connections' => 151,
+                                            'threads_connected' => 3,
+                                        ],
                                     ],
                                     [
                                         'service' => 'redis',
                                         'status' => 'ok',
                                         'code' => 200,
                                         'execution_time_ms' => 1,
-                                        'meta' => [],
+                                        'meta' => [
+                                            'version' => '7.0.0',
+                                            'used_memory' => '1048576',
+                                            'connected_clients' => 4,
+                                        ],
                                     ],
                                 ],
                                 'healthy' => true,
@@ -118,10 +134,18 @@ class CheckServiceHealth
                                         'code' => 200,
                                         'execution_time_ms' => 2,
                                         'meta' => [
-                                            'opcache_enabled' => true,
-                                            'debug_mode' => false,
+                                            'app_version' => '1.2.0',
+                                            'php_version' => '8.4.0',
+                                            'framework_version' => '13.25.0',
+                                            'environment' => 'production',
                                             'maintenance_mode' => false,
-                                            'memory_limit' => '128M',
+                                            'degraded_reasons' => [],
+                                            'php_ini' => [
+                                                'memory_limit' => '128M',
+                                                'max_execution_time' => '30',
+                                                'post_max_size' => '8M',
+                                                'opcache_enabled' => true,
+                                            ],
                                         ],
                                     ],
                                     [
@@ -136,7 +160,11 @@ class CheckServiceHealth
                                         'status' => 'ok',
                                         'code' => 200,
                                         'execution_time_ms' => 1,
-                                        'meta' => [],
+                                        'meta' => [
+                                            'version' => '7.0.0',
+                                            'used_memory' => '1048576',
+                                            'connected_clients' => 4,
+                                        ],
                                     ],
                                 ],
                                 'healthy' => false,
@@ -182,7 +210,7 @@ class CheckServiceHealth
                                 'status' => 'ok',
                                 'code' => 200,
                                 'execution_time_ms' => 3,
-                                'meta' => [],
+                                'meta' => ['version' => '7.0.0', 'used_memory' => '1048576', 'connected_clients' => 4],
                             ]
                         ),
                     ]
@@ -259,15 +287,17 @@ class CheckServiceHealth
             [[$result->service, $result->status->value, $result->code, $result->executionTimeMs]]
         );
 
-        if (! empty($result->meta)) {
-            $command->table(['Key', 'Value'], $this->flattenMeta($result->meta));
+        $meta = $result->meta->toArray();
+
+        if ($meta !== []) {
+            $command->table(['Key', 'Value'], $this->flattenMeta($meta));
         }
 
         return $result->status === ServiceStatus::Ok ? Command::SUCCESS : Command::FAILURE;
     }
 
     /**
-     * @param  array<string, mixed>  $meta
+     * @param  array<array-key, mixed>  $meta
      * @return list<array{string, string}>
      */
     private function flattenMeta(array $meta, string $prefix = ''): array
@@ -275,10 +305,10 @@ class CheckServiceHealth
         $rows = [];
 
         foreach ($meta as $key => $value) {
-            $fullKey = $prefix !== '' ? "{$prefix}.{$key}" : $key;
+            $fullKey = $prefix !== '' ? "{$prefix}.{$key}" : (string) $key;
 
             if (is_array($value)) {
-                /** @var array<string, mixed> $value */
+                /** @var array<array-key, mixed> $value */
                 $rows = array_merge($rows, $this->flattenMeta($value, $fullKey));
             } else {
                 $rows[] = [$fullKey, match (true) {

@@ -32,9 +32,9 @@ class RedisHealthCheckTest extends TestCase
 
         $this->assertSame(ServiceStatus::Ok, $result->status);
         $this->assertSame('redis', $result->service);
-        $this->assertSame('7.0.0', $result->meta['version']);
-        $this->assertSame('1000', $result->meta['used_memory']);
-        $this->assertSame(2, $result->meta['connected_clients']);
+        $this->assertSame('7.0.0', $result->meta->version);
+        $this->assertSame('1000', $result->meta->usedMemory);
+        $this->assertSame(2, $result->meta->connectedClients);
     }
 
     public function test_check_returns_down_when_connection_fails(): void

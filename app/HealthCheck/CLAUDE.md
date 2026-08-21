@@ -25,13 +25,15 @@ Service readiness checks for DevOps/CI/CD pipelines, monitoring systems, and loc
 }
 ```
 
+`meta` is a generic object on the wire (`HealthStatusResource`'s OpenAPI contract stays untyped there), but each checker builds it from a typed `HealthCheckMetaData` implementation — see `AppHealthMeta`, `MariadbHealthMeta`, and `RedisHealthMeta` in `app/HealthCheck/Data/`. The down/failure path and any service with nothing to report use `EmptyHealthMeta`, which serializes to `[]`.
+
 ## How to Add a New Service
 1. Create `app/HealthCheck/Checks/YourServiceHealthCheck.php` implementing `HealthCheckInterface`
    - `name(): string` — returns the service key (e.g. `'postgres'`)
    - `check(): HealthStatusData` — uses `hrtime(true)` for timing, catches exceptions → `ServiceStatus::Down`
 2. Register the class in `config/health-check.php` under the `checks` array
-3. Add service-specific fields to `meta` array inside `check()` as needed
-4. Update the DTO's `OA\Property` attributes if the data shape or meta fields change; OA path format is `/api/health` and `/api/health/{service}` (no version prefix in URL — version is header-negotiated)
+3. Create a `YourServiceHealthMeta` class in `app/HealthCheck/Data/` implementing `HealthCheckMetaData` for any service-specific fields, and construct it inside `check()`. Use `EmptyHealthMeta` (the `HealthStatusData::$meta` default) if the service has nothing extra to report
+4. Add an `OA\Schema` to the new meta class documenting its shape; OA path format is `/api/health` and `/api/health/{service}` (no version prefix in URL — version is header-negotiated)
 5. Write unit tests in `tests/Unit/HealthCheck/YourServiceHealthCheckTest.php` — mock the relevant facade
 
 ## Architecture Notes

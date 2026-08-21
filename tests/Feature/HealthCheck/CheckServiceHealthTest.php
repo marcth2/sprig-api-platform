@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\HealthCheck;
 
+use App\HealthCheck\Data\AppHealthMeta;
 use App\HealthCheck\Data\HealthStatusData;
 use App\HealthCheck\Enums\ServiceStatus;
 use App\HealthCheck\Services\HealthCheckerService;
@@ -26,8 +27,8 @@ class CheckServiceHealthTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkAll')->andReturn([
-                new HealthStatusData('mariadb', ServiceStatus::Ok, 200, 1, ['latency_ms' => 1]),
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2, ['latency_ms' => 2]),
+                new HealthStatusData('mariadb', ServiceStatus::Ok, 200, 1),
+                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2),
             ]);
         });
 
@@ -44,9 +45,9 @@ class CheckServiceHealthTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkAll')->andReturn([
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1, []),
-                new HealthStatusData('mariadb', ServiceStatus::Down, 503, 2001, []),
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2, []),
+                new HealthStatusData('app', ServiceStatus::Ok, 200, 1),
+                new HealthStatusData('mariadb', ServiceStatus::Down, 503, 2001),
+                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2),
             ]);
         });
 
@@ -72,7 +73,7 @@ class CheckServiceHealthTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('mariadb')->andReturn(
-                new HealthStatusData('mariadb', ServiceStatus::Ok, 200, 1, [])
+                new HealthStatusData('mariadb', ServiceStatus::Ok, 200, 1)
             );
         });
 
@@ -126,12 +127,20 @@ class CheckServiceHealthTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->andReturn(
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1, [
-                    'app_version' => config('app.version'),
-                    'php_version' => PHP_VERSION,
-                    'framework_version' => app()->version(),
-                    'environment' => 'testing',
-                ])
+                new HealthStatusData('app', ServiceStatus::Ok, 200, 1, new AppHealthMeta(
+                    appVersion: (string) config('app.version'),
+                    phpVersion: PHP_VERSION,
+                    frameworkVersion: app()->version(),
+                    environment: 'testing',
+                    maintenanceMode: false,
+                    degradedReasons: [],
+                    phpIni: [
+                        'memory_limit' => '128M',
+                        'max_execution_time' => '30',
+                        'post_max_size' => '8M',
+                        'opcache_enabled' => true,
+                    ],
+                ))
             );
         });
 

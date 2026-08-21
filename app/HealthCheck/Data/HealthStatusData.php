@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\HealthCheck\Data;
 
+use App\HealthCheck\Contracts\HealthCheckMetaData;
 use App\HealthCheck\Enums\ServiceStatus;
 use OpenApi\Attributes as OA;
 use Spatie\LaravelData\Attributes\MapOutputName;
@@ -51,14 +52,14 @@ class HealthStatusData extends Data
             example: 3,
         )]
         public readonly int $executionTimeMs,
-        /** @var array<string, mixed> */
         #[OA\Property(
             property: 'meta',
             type: 'object',
-            description: 'Service-specific diagnostic data. For app: includes opcache_enabled, debug_mode,'
-                .' maintenance_mode, memory_limit. Empty object for services with no extra diagnostics.',
+            description: 'Service-specific diagnostic data. Empty for services with no extra diagnostics; see'
+                .' AppHealthMeta, MariadbHealthMeta, and RedisHealthMeta in the OpenAPI schema components for the'
+                .' shape each service produces.',
             additionalProperties: new OA\AdditionalProperties,
         )]
-        public readonly array $meta = [],
+        public readonly HealthCheckMetaData $meta = new EmptyHealthMeta,
     ) {}
 }
