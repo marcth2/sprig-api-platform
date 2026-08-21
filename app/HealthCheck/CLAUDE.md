@@ -35,6 +35,7 @@ Service readiness checks for DevOps/CI/CD pipelines, monitoring systems, and loc
 3. Create a `YourServiceHealthMeta` class in `app/HealthCheck/Data/` implementing `HealthCheckMetaData` for any service-specific fields, and construct it inside `check()`. Use `EmptyHealthMeta` (the `HealthStatusData::$meta` default) if the service has nothing extra to report
 4. Add an `OA\Schema` to the new meta class documenting its shape; OA path format is `/api/health` and `/api/health/{service}` (no version prefix in URL — version is header-negotiated)
 5. Write unit tests in `tests/Unit/HealthCheck/YourServiceHealthCheckTest.php` — mock the relevant facade
+6. Every `Checks/` implementation must also have at least one test that exercises the real external system (not a mock) — either test layer (Unit or Feature) satisfies this
 
 ## Architecture Notes
 - Uses `lorisleiva/laravel-actions` (`AsAction` trait) — one class handles HTTP (`asController`), CLI (`asCommand`), and future job/listener contexts
