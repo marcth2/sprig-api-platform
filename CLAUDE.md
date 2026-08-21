@@ -57,7 +57,9 @@ docker compose exec app php artisan l5-swagger:generate
 docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 ```
 
-`composer test` runs the full suite with `--coverage --min=100`. `composer analyse` runs PHPStan at level max with no baseline. `composer format -- --test` runs Pint in dry-run mode; drop `-- --test` to auto-fix. `l5-swagger:generate` regenerates the OpenAPI spec from annotations. `l5-swagger:audit` (a custom command in `app/Console/Commands/AuditOpenApiSpec.php`) fails on undocumented routes, phantom spec paths, or incomplete annotations.
+`composer test` runs the full suite with `--coverage --min=100`. `composer analyse` runs PHPStan at level max, via `larastan/larastan` for Laravel-aware type inference (Eloquent, facades, container resolution), with no baseline. `composer format -- --test` runs Pint in dry-run mode; drop `-- --test` to auto-fix. `l5-swagger:generate` regenerates the OpenAPI spec from annotations. `l5-swagger:audit` (a custom command in `app/Console/Commands/AuditOpenApiSpec.php`) fails on undocumented routes, phantom spec paths, or incomplete annotations.
+
+**PHPStan escape hatch:** if level-max friction ever becomes real (a violation that isn't a genuine bug and can't be resolved by narrowing types further), suppress it inline with `@phpstan-ignore-line` plus a mandatory one-line justification comment explaining why — reviewed per-occurrence in the PR diff that introduces it. Never add a bulk `phpstan-baseline.neon`: it freezes an entire snapshot of errors with no per-occurrence review or stated reason. `phpstan.neon` sets `reportUnmatchedIgnoredErrors: true`, so a suppression that no longer matches any error fails CI instead of silently accumulating. Decided in [#69](https://github.com/marcth2/sprig-api-platform/issues/69) — see map #39's "Decisions so far" for the reasoning.
 
 `.github/workflows/ci.yml` runs the same five gates on every push/PR against `master`, using the Dockerfile's `ci` build target (PCOV-enabled).
 
@@ -91,4 +93,4 @@ docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 
 ---
 
-_Last updated: 2026-08-20 (Recorded the shared-Models / direct-import-first cross-domain dependency convention, #63)_
+_Last updated: 2026-08-21 (Adopted Larastan for PHPStan analysis and documented the inline-ignore escape-hatch convention, #69)_

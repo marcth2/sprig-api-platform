@@ -1,6 +1,10 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
 parameters:
     level: max
     paths:
         - app
     bootstrapFiles:
         - phpstan-bootstrap.php
+    reportUnmatchedIgnoredErrors: true
