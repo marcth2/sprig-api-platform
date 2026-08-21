@@ -23,7 +23,7 @@ class ApplicationHealthCheckTest extends TestCase
     {
         $result = (new ApplicationHealthCheck)->check();
 
-        $this->assertArrayHasKey('api_version', $result->meta);
+        $this->assertArrayHasKey('app_version', $result->meta);
         $this->assertArrayHasKey('php_version', $result->meta);
         $this->assertArrayHasKey('framework_version', $result->meta);
         $this->assertArrayHasKey('environment', $result->meta);
@@ -32,11 +32,11 @@ class ApplicationHealthCheckTest extends TestCase
         $this->assertArrayHasKey('php_ini', $result->meta);
     }
 
-    public function test_check_meta_api_version_matches_config(): void
+    public function test_check_meta_app_version_matches_config(): void
     {
         $result = (new ApplicationHealthCheck)->check();
 
-        $this->assertSame(config('api.version'), $result->meta['api_version']);
+        $this->assertSame(config('app.version'), $result->meta['app_version']);
     }
 
     public function test_check_returns_degraded_when_in_maintenance_mode(): void

@@ -47,7 +47,7 @@ class ApplicationHealthCheck implements HealthCheckInterface
         $ms = intdiv(hrtime(true) - $start, 1_000_000);
 
         return new HealthStatusData('app', $status, $code, $ms, [
-            'api_version' => config('api.version'),
+            'app_version' => config('app.version'),
             'php_version' => PHP_VERSION,
             'framework_version' => app()->version(),
             'environment' => app()->environment(),

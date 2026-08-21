@@ -40,7 +40,7 @@ class CheckServiceHealthCommandTest extends TestCase
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->once()->andReturn(
                 new HealthStatusData('app', ServiceStatus::Ok, 200, 1, [
-                    'api_version' => config('api.version'),
+                    'app_version' => config('app.version'),
                     'environment' => 'local',
                     'php_ini' => ['opcache_enabled' => true],
                 ])
@@ -48,7 +48,7 @@ class CheckServiceHealthCommandTest extends TestCase
         });
 
         $this->artisan('health:check app')
-            ->expectsOutputToContain('api_version')
+            ->expectsOutputToContain('app_version')
             ->expectsOutputToContain('php_ini.opcache_enabled')
             ->assertExitCode(0);
     }

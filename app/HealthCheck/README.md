@@ -94,7 +94,7 @@ docker compose exec app php artisan health:check redis
 +----------------------------+--------+
 | Key                        | Value  |
 +----------------------------+--------+
-| api_version                | 1.0.0  |
+| app_version                | 0.1.2  |
 | php_version                | 8.4.x  |
 | framework_version          | 13.x   |
 | environment                | local  |
@@ -157,7 +157,7 @@ curl -s \
       "code": 200,
       "execution_time_ms": 2,
       "meta": {
-        "api_version": "1.0.0",
+        "app_version": "0.1.2",
         "php_version": "8.4.x",
         "framework_version": "13.x",
         "environment": "local",
