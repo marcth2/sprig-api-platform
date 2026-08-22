@@ -49,22 +49,32 @@ jobs:
               }
 
               if (isPortfolio && childLabels.includes('wayfinder:task')) {
+                // closedByPullRequestsReferences only counts PRs that auto-closed the issue via a
+                // closing keyword (e.g. "Closes #N"). This project's convention has been to close
+                // task tickets by hand with a comment linking the PR, so that field is reliably
+                // empty here — check any merged PR that cross-references the issue instead.
                 const result = await github.graphql(
                   `query($owner:String!, $repo:String!, $number:Int!) {
                     repository(owner:$owner, name:$repo) {
                       issue(number:$number) {
-                        closedByPullRequestsReferences(first: 10, includeClosedPrs: true) {
-                          nodes { number merged }
+                        timelineItems(first: 100, itemTypes: [CROSS_REFERENCED_EVENT]) {
+                          nodes {
+                            ... on CrossReferencedEvent {
+                              source {
+                                ... on PullRequest { number merged }
+                              }
+                            }
+                          }
                         }
                       }
                     }
                   }`,
                   { owner, repo, number: child.number }
                 );
-                const refs = result.repository.issue.closedByPullRequestsReferences.nodes;
-                const hasMergedPr = refs.some(pr => pr.merged);
+                const refs = result.repository.issue.timelineItems.nodes;
+                const hasMergedPr = refs.some(ref => ref.source && ref.source.merged);
                 if (!hasMergedPr) {
-                  violations.push(`- #${child.number} "${child.title}" is closed but has no merged PR linked (wayfinder:task tickets on a portfolio wayfinder must ship via a merged PR)`);
+                  violations.push(`- #${child.number} "${child.title}" is closed but has no merged PR referencing it (wayfinder:task tickets on a portfolio wayfinder must ship via a merged PR)`);
                 }
               }
             }
