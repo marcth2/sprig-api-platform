@@ -34,8 +34,8 @@ class ApplicationHealthCheck implements HealthCheckInterface
             $degraded[] = 'debug_enabled';
         }
 
-        $opcacheEnabled = ini_get('opcache.enable');
-        if (($opcacheEnabled === false || $opcacheEnabled === '' || $opcacheEnabled === '0') && ! app()->isLocal()) {
+        $opcacheEnabled = (bool) ini_get('opcache.enable');
+        if (! $opcacheEnabled && ! app()->isLocal()) {
             $degraded[] = 'opcache_disabled';
         }
 
@@ -65,7 +65,7 @@ class ApplicationHealthCheck implements HealthCheckInterface
                 memoryLimit: ini_get('memory_limit'),
                 maxExecutionTime: ini_get('max_execution_time'),
                 postMaxSize: $postMaxSize,
-                opcacheEnabled: (bool) ini_get('opcache.enable'),
+                opcacheEnabled: $opcacheEnabled,
             ),
         ));
     }
