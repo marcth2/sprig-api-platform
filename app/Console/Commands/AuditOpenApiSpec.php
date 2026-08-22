@@ -174,15 +174,15 @@ class AuditOpenApiSpec extends Command
     {
         return array_values(array_filter(
             $routes,
-            fn (array $r): bool => in_array('api', $r['middleware'])
+            fn (array $route): bool => in_array('api', $route['middleware'])
         ));
     }
 
     /** @param string[] $middleware */
     private function isL5SwaggerRoute(array $middleware): bool
     {
-        foreach ($middleware as $m) {
-            if (str_contains($m, 'L5Swagger')) {
+        foreach ($middleware as $middlewareEntry) {
+            if (str_contains($middlewareEntry, 'L5Swagger')) {
                 return true;
             }
         }
@@ -202,7 +202,7 @@ class AuditOpenApiSpec extends Command
     {
         return array_values(array_filter(
             $routes,
-            fn (array $r): bool => str_starts_with($r['uri'], 'api/') && ! in_array('api', $r['middleware'])
+            fn (array $route): bool => str_starts_with($route['uri'], 'api/') && ! in_array('api', $route['middleware'])
         ));
     }
 
@@ -213,11 +213,11 @@ class AuditOpenApiSpec extends Command
      */
     private function findUndocumented(array $routes, array $specPaths): array
     {
-        $specSignatures = array_map(fn (array $p): string => $p['method'].':'.$p['path'], $specPaths);
+        $specSignatures = array_map(fn (array $path): string => $path['method'].':'.$path['path'], $specPaths);
 
         return array_values(array_filter(
             $routes,
-            fn (array $r): bool => ! in_array($r['method'].':'.$r['uri'], $specSignatures)
+            fn (array $route): bool => ! in_array($route['method'].':'.$route['uri'], $specSignatures)
         ));
     }
 
@@ -230,12 +230,12 @@ class AuditOpenApiSpec extends Command
      */
     private function findPhantom(array $routes, array $specPaths): array
     {
-        $routeSignatures = array_map(fn (array $r): string => $r['method'].':'.$r['uri'], $routes);
+        $routeSignatures = array_map(fn (array $route): string => $route['method'].':'.$route['uri'], $routes);
 
         return array_values(array_filter(
             $specPaths,
-            fn (array $p): bool => str_starts_with($p['path'], 'api/')
-                && ! in_array($p['method'].':'.$p['path'], $routeSignatures)
+            fn (array $path): bool => str_starts_with($path['path'], 'api/')
+                && ! in_array($path['method'].':'.$path['path'], $routeSignatures)
         ));
     }
 
@@ -319,7 +319,7 @@ class AuditOpenApiSpec extends Command
     {
         return (bool) array_filter(
             $middleware,
-            fn (string $m): bool => str_contains($m, 'sanctum') || str_contains($m, 'Authenticate')
+            fn (string $entry): bool => str_contains($entry, 'sanctum') || str_contains($entry, 'Authenticate')
         );
     }
 
@@ -334,7 +334,7 @@ class AuditOpenApiSpec extends Command
         $this->line('<fg=red>Undocumented routes ('.count($undocumented).'):</>');
         $this->table(
             ['Method', 'URI'],
-            array_map(fn (array $r): array => [strtoupper($r['method']), '/'.$r['uri']], $undocumented)
+            array_map(fn (array $route): array => [strtoupper($route['method']), '/'.$route['uri']], $undocumented)
         );
     }
 
@@ -349,7 +349,7 @@ class AuditOpenApiSpec extends Command
         $this->line('<fg=red>Phantom spec paths with no matching route ('.count($phantom).'):</>');
         $this->table(
             ['Method', 'Path'],
-            array_map(fn (array $p): array => [strtoupper($p['method']), '/'.$p['path']], $phantom)
+            array_map(fn (array $path): array => [strtoupper($path['method']), '/'.$path['path']], $phantom)
         );
     }
 
@@ -364,7 +364,10 @@ class AuditOpenApiSpec extends Command
         $this->line('<fg=yellow>Routes missing api middleware ('.count($missingApiMiddleware).') — warnings:</>');
         $this->table(
             ['Method', 'URI'],
-            array_map(fn (array $r): array => [strtoupper($r['method']), '/'.$r['uri']], $missingApiMiddleware)
+            array_map(
+                fn (array $route): array => [strtoupper($route['method']), '/'.$route['uri']],
+                $missingApiMiddleware
+            )
         );
     }
 

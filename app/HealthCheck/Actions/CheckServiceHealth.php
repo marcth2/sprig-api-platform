@@ -6,9 +6,8 @@ namespace App\HealthCheck\Actions;
 
 use App\HealthCheck\Data\HealthAggregateData;
 use App\HealthCheck\Data\HealthStatusData;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 use App\HealthCheck\Services\HealthCheckerService;
-use App\Shared\Data\ApiErrorData;
 use Illuminate\Console\Command;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,7 +28,7 @@ class CheckServiceHealth
     {
         if ($service === null) {
             $statuses = $this->checker->checkAll();
-            $healthy = collect($statuses)->every(fn (HealthStatusData $s) => $s->status === ServiceStatus::Ok);
+            $healthy = collect($statuses)->every(fn (HealthStatusData $data) => $data->state === ServiceState::Ok);
 
             return new HealthAggregateData(
                 services: $statuses,
@@ -66,8 +65,8 @@ class CheckServiceHealth
                                 'services' => [
                                     [
                                         'service' => 'app',
-                                        'status' => 'ok',
-                                        'code' => 200,
+                                        'state' => 'ok',
+                                        'status' => 200,
                                         'execution_time_ms' => 2,
                                         'meta' => [
                                             'app_version' => '1.2.0',
@@ -86,8 +85,8 @@ class CheckServiceHealth
                                     ],
                                     [
                                         'service' => 'mariadb',
-                                        'status' => 'ok',
-                                        'code' => 200,
+                                        'state' => 'ok',
+                                        'status' => 200,
                                         'execution_time_ms' => 1,
                                         'meta' => [
                                             'version' => '10.11.0-MariaDB',
@@ -97,8 +96,8 @@ class CheckServiceHealth
                                     ],
                                     [
                                         'service' => 'redis',
-                                        'status' => 'ok',
-                                        'code' => 200,
+                                        'state' => 'ok',
+                                        'status' => 200,
                                         'execution_time_ms' => 1,
                                         'meta' => [
                                             'version' => '7.0.0',
@@ -132,8 +131,8 @@ class CheckServiceHealth
                                 'services' => [
                                     [
                                         'service' => 'app',
-                                        'status' => 'ok',
-                                        'code' => 200,
+                                        'state' => 'ok',
+                                        'status' => 200,
                                         'execution_time_ms' => 2,
                                         'meta' => [
                                             'app_version' => '1.2.0',
@@ -152,15 +151,15 @@ class CheckServiceHealth
                                     ],
                                     [
                                         'service' => 'mariadb',
-                                        'status' => 'down',
-                                        'code' => 503,
+                                        'state' => 'down',
+                                        'status' => 503,
                                         'execution_time_ms' => 2001,
                                         'meta' => [],
                                     ],
                                     [
                                         'service' => 'redis',
-                                        'status' => 'ok',
-                                        'code' => 200,
+                                        'state' => 'ok',
+                                        'status' => 200,
                                         'execution_time_ms' => 1,
                                         'meta' => [
                                             'version' => '7.0.0',
@@ -213,8 +212,8 @@ class CheckServiceHealth
                             summary: 'Redis healthy',
                             value: [
                                 'service' => 'redis',
-                                'status' => 'ok',
-                                'code' => 200,
+                                'state' => 'ok',
+                                'status' => 200,
                                 'execution_time_ms' => 3,
                                 'meta' => ['version' => '7.0.0', 'used_memory' => '1048576', 'connected_clients' => 4],
                             ]
@@ -236,7 +235,7 @@ class CheckServiceHealth
                         new OA\Examples(
                             example: 'unknown-service',
                             summary: 'Unknown service',
-                            value: ['message' => 'Unknown service']
+                            value: ['message' => 'Unknown service', 'status' => 404]
                         ),
                     ]
                 )
@@ -250,17 +249,13 @@ class CheckServiceHealth
     )]
     public function asController(Request $request, ?string $service = null): JsonResponse
     {
-        try {
-            $result = $this->handle($service);
-        } catch (\InvalidArgumentException) {
-            return response()->json(new ApiErrorData('Unknown service'), 404);
-        }
+        $result = $this->handle($service);
 
         if ($result instanceof HealthAggregateData) {
             return response()->json($result, $result->healthy ? 200 : 503);
         }
 
-        return response()->json($result, $result->code);
+        return response()->json($result, $result->status);
     }
 
     public function asCommand(Command $command): int
@@ -278,9 +273,14 @@ class CheckServiceHealth
 
         if ($result instanceof HealthAggregateData) {
             $command->table(
-                ['Service', 'Status', 'Code', 'Time (ms)'],
+                ['Service', 'State', 'Status', 'Time (ms)'],
                 array_map(
-                    fn (HealthStatusData $d) => [$d->service, $d->status->value, $d->code, $d->executionTimeMs],
+                    fn (HealthStatusData $data) => [
+                        $data->service,
+                        $data->state->value,
+                        $data->status,
+                        $data->executionTimeMs,
+                    ],
                     $result->services
                 )
             );
@@ -289,8 +289,8 @@ class CheckServiceHealth
         }
 
         $command->table(
-            ['Service', 'Status', 'Code', 'Time (ms)'],
-            [[$result->service, $result->status->value, $result->code, $result->executionTimeMs]]
+            ['Service', 'State', 'Status', 'Time (ms)'],
+            [[$result->service, $result->state->value, $result->status, $result->executionTimeMs]]
         );
 
         $meta = $result->meta->toArray();
@@ -299,7 +299,7 @@ class CheckServiceHealth
             $command->table(['Key', 'Value'], $this->flattenMeta($meta));
         }
 
-        return $result->status === ServiceStatus::Ok ? Command::SUCCESS : Command::FAILURE;
+        return $result->state === ServiceState::Ok ? Command::SUCCESS : Command::FAILURE;
     }
 
     /**
@@ -317,11 +317,14 @@ class CheckServiceHealth
                 /** @var array<array-key, mixed> $value */
                 $rows = array_merge($rows, $this->flattenMeta($value, $fullKey));
             } else {
-                $rows[] = [$fullKey, match (true) {
-                    is_bool($value) => $value ? 'true' : 'false',
-                    is_scalar($value) => (string) $value,
-                    default => '',
-                }];
+                $rows[] = [
+                    $fullKey,
+                    match (true) {
+                        is_bool($value) => $value ? 'true' : 'false',
+                        is_scalar($value) => (string) $value,
+                        default => '',
+                    },
+                ];
             }
         }
 

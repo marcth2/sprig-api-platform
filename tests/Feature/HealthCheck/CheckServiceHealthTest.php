@@ -7,7 +7,7 @@ namespace Tests\Feature\HealthCheck;
 use App\HealthCheck\Data\AppHealthMeta;
 use App\HealthCheck\Data\HealthStatusData;
 use App\HealthCheck\Data\PhpIniData;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 use App\HealthCheck\Services\HealthCheckerService;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,8 +28,8 @@ class CheckServiceHealthTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkAll')->andReturn([
-                new HealthStatusData('mariadb', ServiceStatus::Ok, 200, 1),
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2),
+                new HealthStatusData('mariadb', ServiceState::Ok, 200, 1),
+                new HealthStatusData('redis', ServiceState::Ok, 200, 2),
             ]);
         });
 
@@ -46,9 +46,9 @@ class CheckServiceHealthTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkAll')->andReturn([
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1),
-                new HealthStatusData('mariadb', ServiceStatus::Down, 503, 2001),
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2),
+                new HealthStatusData('app', ServiceState::Ok, 200, 1),
+                new HealthStatusData('mariadb', ServiceState::Down, 503, 2001),
+                new HealthStatusData('redis', ServiceState::Ok, 200, 2),
             ]);
         });
 
@@ -74,7 +74,7 @@ class CheckServiceHealthTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('mariadb')->andReturn(
-                new HealthStatusData('mariadb', ServiceStatus::Ok, 200, 1)
+                new HealthStatusData('mariadb', ServiceState::Ok, 200, 1)
             );
         });
 
@@ -92,21 +92,24 @@ class CheckServiceHealthTest extends TestCase
 
         $response = $this->actingAs($user, 'sanctum')->getJson('/api/health/unknown');
 
-        $response->assertStatus(404);
+        $response->assertStatus(404)
+            ->assertJson(['message' => 'Unknown service: unknown', 'status' => 404]);
     }
 
     public function test_health_requires_auth(): void
     {
         $response = $this->getJson('/api/health');
 
-        $response->assertStatus(401);
+        $response->assertStatus(401)
+            ->assertJsonStructure(['message', 'status']);
     }
 
     public function test_health_service_requires_auth(): void
     {
         $response = $this->getJson('/api/health/redis');
 
-        $response->assertStatus(401);
+        $response->assertStatus(401)
+            ->assertJsonStructure(['message', 'status']);
     }
 
     public function test_aggregate_response_has_correct_structure(): void
@@ -117,7 +120,7 @@ class CheckServiceHealthTest extends TestCase
 
         $response->assertJsonStructure([
             'services' => [
-                '*' => ['service', 'status', 'code', 'execution_time_ms', 'meta'],
+                '*' => ['service', 'state', 'status', 'execution_time_ms', 'meta'],
             ],
             'healthy',
             'checked_at',
@@ -128,7 +131,7 @@ class CheckServiceHealthTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->andReturn(
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1, new AppHealthMeta(
+                new HealthStatusData('app', ServiceState::Ok, 200, 1, new AppHealthMeta(
                     appVersion: (string) config('app.version'),
                     phpVersion: PHP_VERSION,
                     frameworkVersion: app()->version(),

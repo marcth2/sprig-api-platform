@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Http\Middleware;
 
 use App\HealthCheck\Data\HealthStatusData;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 use App\HealthCheck\Services\HealthCheckerService;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,7 +19,7 @@ class ApiVersionTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->andReturn(
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1)
+                new HealthStatusData('app', ServiceState::Ok, 200, 1)
             );
         });
 
@@ -35,7 +35,7 @@ class ApiVersionTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->andReturn(
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1)
+                new HealthStatusData('app', ServiceState::Ok, 200, 1)
             );
         });
 
@@ -61,7 +61,7 @@ class ApiVersionTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->andReturn(
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1)
+                new HealthStatusData('app', ServiceState::Ok, 200, 1)
             );
         });
 

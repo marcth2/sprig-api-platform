@@ -8,7 +8,7 @@ use App\HealthCheck\Contracts\HealthCheckInterface;
 use App\HealthCheck\Data\AppHealthMeta;
 use App\HealthCheck\Data\HealthStatusData;
 use App\HealthCheck\Data\PhpIniData;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 
 class ApplicationHealthCheck implements HealthCheckInterface
 {
@@ -44,8 +44,8 @@ class ApplicationHealthCheck implements HealthCheckInterface
             $degraded[] = 'memory_limit_low';
         }
 
-        $status = empty($degraded) ? ServiceStatus::Ok : ServiceStatus::Degraded;
-        $code = $status === ServiceStatus::Ok ? 200 : 503;
+        $state = empty($degraded) ? ServiceState::Ok : ServiceState::Degraded;
+        $code = $state === ServiceState::Ok ? 200 : 503;
         $ms = intdiv(hrtime(true) - $start, 1_000_000);
 
         $appVersion = config('app.version');
@@ -54,7 +54,7 @@ class ApplicationHealthCheck implements HealthCheckInterface
         $postMaxSize = ini_get('post_max_size');
         $postMaxSize = is_string($postMaxSize) ? $postMaxSize : '';
 
-        return new HealthStatusData('app', $status, $code, $ms, new AppHealthMeta(
+        return new HealthStatusData('app', $state, $code, $ms, new AppHealthMeta(
             appVersion: $appVersion,
             phpVersion: PHP_VERSION,
             frameworkVersion: app()->version(),
