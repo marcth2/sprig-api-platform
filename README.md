@@ -166,7 +166,7 @@ Each domain has its own `README.md` with authentication instructions, endpoint r
 | Layer | Technology |
 |-------|-----------|
 | Framework | Laravel 13.x |
-| PHP | 8.5-fpm-alpine (multi-stage: base / dev / ci / release) |
+| PHP | 8.5-fpm-alpine (multi-stage: base / dev / ci) |
 | Web server | Nginx Alpine → PHP-FPM |
 | Database | MariaDB 11 |
 | Cache / Sessions / Queues | Redis 7 (phpredis) |
