@@ -113,11 +113,7 @@ class CheckServiceHealth
                     ]
                 )
             ),
-            new OA\Response(
-                response: 401,
-                description: 'No valid Bearer token was provided.',
-                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
-            ),
+            new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedError'),
             new OA\Response(
                 response: 503,
                 description: 'One or more services are degraded or unreachable.',
@@ -221,11 +217,7 @@ class CheckServiceHealth
                     ]
                 )
             ),
-            new OA\Response(
-                response: 401,
-                description: 'No valid Bearer token was provided.',
-                content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
-            ),
+            new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedError'),
             new OA\Response(
                 response: 404,
                 description: 'The service name is not recognised by the health check registry.',

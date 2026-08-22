@@ -29,6 +29,11 @@ use Spatie\LaravelData\Data;
     ],
     type: 'object',
 )]
+#[OA\Response(
+    response: 'UnauthorizedError',
+    description: 'No valid Bearer token was provided.',
+    content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')
+)]
 class ApiErrorData extends Data
 {
     /**
