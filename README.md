@@ -51,7 +51,7 @@ git config core.hooksPath .githooks
 
 | Service | Description | Local URL |
 |---------|-------------|-----------|
-| **Laravel** | PHP 8.4-FPM application served via Nginx | http://localhost:8000 |
+| **Laravel** | PHP 8.5-FPM application served via Nginx | http://localhost:8000 |
 | **Mailpit** | Local SMTP capture — intercepts all outbound mail | http://localhost:8026 |
 | **Swagger UI** | OpenAPI documentation viewer | http://localhost:8081 |
 | **MariaDB 11** | Primary relational database (MySQL-compatible) | localhost:3307 |
@@ -163,7 +163,7 @@ Each domain has its own `README.md` with authentication instructions, endpoint r
 | Layer | Technology |
 |-------|-----------|
 | Framework | Laravel 13.x |
-| PHP | 8.4-fpm-alpine (multi-stage: base / dev / ci / release) |
+| PHP | 8.5-fpm-alpine (multi-stage: base / dev / ci / release) |
 | Web server | Nginx Alpine → PHP-FPM |
 | Database | MariaDB 11 |
 | Cache / Sessions / Queues | Redis 7 (phpredis) |
