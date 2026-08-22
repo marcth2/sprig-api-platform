@@ -275,7 +275,9 @@ class CheckServiceHealth
             $command->table(
                 ['Service', 'State', 'Status', 'Time (ms)'],
                 array_map(
-                    fn (HealthStatusData $d) => [$d->service, $d->state->value, $d->status, $d->executionTimeMs],
+                    fn (HealthStatusData $data) => [
+                        $data->service, $data->state->value, $data->status, $data->executionTimeMs,
+                    ],
                     $result->services
                 )
             );
