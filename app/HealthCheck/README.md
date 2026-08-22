@@ -252,7 +252,7 @@ curl -s \
 
 1. Create `app/HealthCheck/Checks/YourServiceHealthCheck.php` implementing `HealthCheckInterface`
 2. Register it in `config/health-check.php` under `checks`
-3. Add an OpenAPI schema to `app/OpenApi/Schemas/HealthCheck/` if a distinct response shape is needed
+3. Add an `OA\Schema` attribute to the new meta class in `app/HealthCheck/Data/` if a distinct response shape is needed (see `app/HealthCheck/CLAUDE.md`)
 4. Run `php artisan l5-swagger:generate` to update the spec
 5. Add tests in `tests/Unit/HealthCheck/YourServiceHealthCheckTest.php`
 
