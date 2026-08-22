@@ -4,6 +4,7 @@ Run the full validation gate in sequence. Stop immediately and report the failur
 docker compose exec app composer test
 docker compose exec app composer analyse
 docker compose exec app composer format -- --test
+docker compose exec app composer lint
 docker compose exec app php artisan l5-swagger:generate
 docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 ```

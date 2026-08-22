@@ -6,7 +6,7 @@ Validate, then present a review summary to the developer before committing, push
 
 ## Step 1 — Validate
 
-Run `/validate`. If any gate fails, stop and report. Do not continue until all five gates pass.
+Run `/validate`. If any gate fails, stop and report. Do not continue until all six gates pass.
 
 ---
 

@@ -105,7 +105,7 @@ docker compose logs -f nginx
 
 ## Testing
 
-The project targets **100% test coverage**. Use `/validate` (Claude command) to run all five gates in sequence before any commit.
+The project targets **100% test coverage**. Use `/validate` (Claude command) to run all six gates in sequence before any commit.
 
 ```bash
 # Full test suite — 100% coverage required, fails below threshold
@@ -118,7 +118,7 @@ docker compose exec app php artisan test tests/Feature/HealthCheck/CheckServiceH
 docker compose exec app php artisan test --filter=test_check_redis_returns_ok
 ```
 
-### Validation Gate (all five must pass)
+### Validation Gate (all six must pass)
 
 ```bash
 # 1. Tests — 100% coverage
@@ -130,14 +130,17 @@ docker compose exec app composer analyse
 # 3. Code style — must produce no changes
 docker compose exec app composer format -- --test
 
-# 4. Regenerate OpenAPI spec
+# 4. Line-length lint
+docker compose exec app composer lint
+
+# 5. Regenerate OpenAPI spec
 docker compose exec app php artisan l5-swagger:generate
 
-# 5. Audit OpenAPI spec — undocumented routes, phantom paths, incomplete annotations
+# 6. Audit OpenAPI spec — undocumented routes, phantom paths, incomplete annotations
 docker compose exec app php artisan l5-swagger:audit --fail-on-warnings
 ```
 
-Run `/validate` in Claude Code to execute all five gates automatically.
+Run `/validate` in Claude Code to execute all six gates automatically.
 
 ---
 
