@@ -2,7 +2,7 @@
 
 # Sprig API Platform
 
-A Laravel 13 platform that starts as a polished, reusable team starter template and becomes the home for migrated services over time. Phase one reimplements the HealthCheck domain and engineering conventions of an internal prototype under this branding and a simplified trunk-based git workflow.
+A Laravel 13 platform that starts as a polished, reusable team starter template and becomes the home for migrated services over time. The first migration target is a legacy CodeIgniter application. Phase one reimplements the HealthCheck domain and engineering conventions of an internal prototype under this branding and a simplified trunk-based git workflow.
 
 ---
 
