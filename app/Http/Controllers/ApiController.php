@@ -19,9 +19,9 @@ use OpenApi\Attributes as OA;
 #[OA\Tag(
     name: 'HealthCheck',
     description: <<<'TEXT'
-        Service readiness checks for deployment pipelines, monitoring systems, and local debugging.
-        Consumers: CI/CD post-deploy probes (GET /api/health), developer drill-down (GET /api/health/{service}),
-        and CLI (php artisan health:check).
+        Service readiness checks for monitoring systems and local debugging today; deployment-pipeline
+        post-deploy probes (GET /api/health) are a planned consumer with no token-provisioning path yet.
+        Consumers: developer drill-down (GET /api/health/{service}) and CLI (php artisan health:check).
         TEXT,
 )]
 class ApiController extends Controller {}
