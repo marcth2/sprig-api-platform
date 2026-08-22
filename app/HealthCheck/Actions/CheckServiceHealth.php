@@ -276,7 +276,10 @@ class CheckServiceHealth
                 ['Service', 'State', 'Status', 'Time (ms)'],
                 array_map(
                     fn (HealthStatusData $data) => [
-                        $data->service, $data->state->value, $data->status, $data->executionTimeMs,
+                        $data->service,
+                        $data->state->value,
+                        $data->status,
+                        $data->executionTimeMs,
                     ],
                     $result->services
                 )
@@ -314,11 +317,14 @@ class CheckServiceHealth
                 /** @var array<array-key, mixed> $value */
                 $rows = array_merge($rows, $this->flattenMeta($value, $fullKey));
             } else {
-                $rows[] = [$fullKey, match (true) {
-                    is_bool($value) => $value ? 'true' : 'false',
-                    is_scalar($value) => (string) $value,
-                    default => '',
-                }];
+                $rows[] = [
+                    $fullKey,
+                    match (true) {
+                        is_bool($value) => $value ? 'true' : 'false',
+                        is_scalar($value) => (string) $value,
+                        default => '',
+                    },
+                ];
             }
         }
 
