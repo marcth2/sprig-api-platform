@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Route as RouteFacade;
 use Illuminate\Support\Str;
 use OpenApi\Attributes as OA;
@@ -90,9 +89,9 @@ class AuditOpenApiSpec extends Command
             [
                 ['Routes audited', (string) count($routes)],
                 ['Spec paths', (string) count($specPaths)],
-                ['Undocumented routes', '0'],
-                ['Phantom spec paths', '0'],
-                ['DTO/schema drift', '0'],
+                ['Undocumented routes', (string) count($undocumented)],
+                ['Phantom spec paths', (string) count($phantom)],
+                ['DTO/schema drift', (string) count($dtoSchemaDrift)],
                 [
                     'Routes missing api middleware',
                     count($missingApiMiddleware) > 0 ? count($missingApiMiddleware).' warning(s)' : '0',
@@ -157,7 +156,6 @@ class AuditOpenApiSpec extends Command
         $routes = [];
 
         foreach (RouteFacade::getRoutes()->getRoutes() as $route) {
-            /** @var Route $route */
             /** @var string[] $middleware */
             $middleware = $route->middleware();
 
