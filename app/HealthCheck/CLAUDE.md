@@ -4,7 +4,7 @@
 Service readiness checks for DevOps/CI/CD pipelines, monitoring systems, and local debugging. No models — reads PHP config/env and queries services directly.
 
 ## Consumers
-- **Deployment pipelines**: `GET /api/health` post-deploy to confirm readiness (all services 200)
+- **Deployment pipelines** (planned, not yet wired up): `GET /api/health` post-deploy to confirm readiness (all services 200). No CD workflow or staging/prod environment exists yet, and no token-provisioning path exists for a machine consumer — the only token-issuance mechanism (`user:token`) is local-development-only. See [#77](https://github.com/marcth2/sprig-api-platform/issues/77)
 - **Local developers**: `GET /api/health/{service}` when a specific service appears broken
 - **CLI / SSH**: `php artisan health:check {?service}` — no auth, formatted table output
 
