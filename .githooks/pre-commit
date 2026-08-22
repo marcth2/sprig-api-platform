@@ -1,5 +1,5 @@
 #!/bin/bash
-# Lints staged PHP files with Pint + PHPStan.
+# Lints staged PHP files with Pint + PHPStan + PHPCS.
 # Enable once per checkout: git config core.hooksPath .githooks
 set -euo pipefail
 
