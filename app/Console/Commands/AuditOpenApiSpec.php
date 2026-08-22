@@ -7,16 +7,24 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Route as RouteFacade;
+use Illuminate\Support\Str;
+use OpenApi\Attributes as OA;
+use ReflectionClass;
+use ReflectionMethod;
+use Spatie\LaravelData\Data;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\Yaml\Yaml;
 
 class AuditOpenApiSpec extends Command
 {
     protected $signature = 'l5-swagger:audit
         {--fail-on-warnings : Exit non-zero on warnings (incomplete annotations, missing api middleware)}
-        {--spec-file= : Path to OpenAPI spec file (defaults to configured l5-swagger output)}';
+        {--spec-file= : Path to OpenAPI spec file (defaults to configured l5-swagger output)}
+        {--dto-dir= : Directory to scan for DTOs (defaults to the app directory)}
+        {--dto-namespace= : Base namespace matching --dto-dir (defaults to App\\)}';
 
     protected $description = <<<'TEXT'
-        Audit OpenAPI spec — undocumented routes, phantom paths,
+        Audit OpenAPI spec — undocumented routes, phantom paths, DTO/schema drift,
         routes missing api middleware, incomplete annotations
         TEXT;
 
@@ -43,16 +51,25 @@ class AuditOpenApiSpec extends Command
         $incomplete = $this->findIncomplete($routes, $specPaths);
         $missingApiMiddleware = $this->findMissingApiMiddleware($allRoutes);
 
+        $dtoDirOption = $this->option('dto-dir');
+        $dtoDir = is_string($dtoDirOption) ? $dtoDirOption : app_path();
+
+        $dtoNamespaceOption = $this->option('dto-namespace');
+        $dtoNamespace = is_string($dtoNamespaceOption) ? $dtoNamespaceOption : 'App\\';
+
+        $dtoSchemaDrift = $this->findDtoSchemaDrift($dtoDir, $dtoNamespace);
+
         $this->reportUndocumented($undocumented);
         $this->reportPhantom($phantom);
+        $this->reportDtoSchemaDrift($dtoSchemaDrift);
         $this->reportMissingApiMiddleware($missingApiMiddleware);
         $this->reportIncomplete($incomplete);
 
-        $hasErrors = count($undocumented) > 0 || count($phantom) > 0;
+        $hasErrors = count($undocumented) > 0 || count($phantom) > 0 || count($dtoSchemaDrift) > 0;
         $hasWarnings = count($incomplete) > 0 || count($missingApiMiddleware) > 0;
 
         if ($hasErrors) {
-            $total = count($undocumented) + count($phantom);
+            $total = count($undocumented) + count($phantom) + count($dtoSchemaDrift);
             $this->newLine();
             $this->error("Audit failed: {$total} error(s).");
 
@@ -75,6 +92,7 @@ class AuditOpenApiSpec extends Command
                 ['Spec paths', (string) count($specPaths)],
                 ['Undocumented routes', '0'],
                 ['Phantom spec paths', '0'],
+                ['DTO/schema drift', '0'],
                 [
                     'Routes missing api middleware',
                     count($missingApiMiddleware) > 0 ? count($missingApiMiddleware).' warning(s)' : '0',
@@ -323,6 +341,125 @@ class AuditOpenApiSpec extends Command
         );
     }
 
+    /**
+     * Compares each OA\Schema-decorated DTO's constructor-promoted properties against its
+     * #[OA\Property] annotations by name only — not type or nullability. Catches a field
+     * renamed or added on a DTO without updating its OpenAPI annotation, which no other
+     * check in this command (or the rest of the pipeline) would notice.
+     *
+     * @return array<int, array{class: string, issues: string[]}>
+     */
+    private function findDtoSchemaDrift(string $dtoDir, string $dtoNamespace): array
+    {
+        $results = [];
+
+        foreach ($this->getSchemaDtoClasses($dtoDir, $dtoNamespace) as $reflection) {
+            $issues = $this->compareDtoPropertiesToSchema($reflection);
+
+            if (! empty($issues)) {
+                $results[] = [
+                    'class' => $reflection->getName(),
+                    'issues' => $issues,
+                ];
+            }
+        }
+
+        return $results;
+    }
+
+    /** @return array<int, ReflectionClass<Data>> */
+    private function getSchemaDtoClasses(string $dtoDir, string $dtoNamespace): array
+    {
+        $classes = [];
+
+        $finder = (new Finder)->files()->in($dtoDir)->path('Data')->name('*.php');
+
+        foreach ($finder as $file) {
+            $relative = str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
+            $class = rtrim($dtoNamespace, '\\').'\\'.$relative;
+
+            if (! class_exists($class)) {
+                continue;
+            }
+
+            $reflection = new ReflectionClass($class);
+
+            if (! $reflection->isSubclassOf(Data::class) || empty($reflection->getAttributes(OA\Schema::class))) {
+                continue;
+            }
+
+            $classes[] = $reflection;
+        }
+
+        return $classes;
+    }
+
+    /**
+     * @param ReflectionClass<Data> $reflection
+     * @return string[]
+     */
+    private function compareDtoPropertiesToSchema(ReflectionClass $reflection): array
+    {
+        $constructor = $reflection->getConstructor();
+
+        if ($constructor === null) {
+            return [];
+        }
+
+        $phpProperties = [];
+        foreach ($constructor->getParameters() as $parameter) {
+            $phpProperties[Str::snake($parameter->getName())] = $parameter->getName();
+        }
+
+        $annotatedProperties = $this->getAnnotatedPropertyNames($reflection, $constructor);
+
+        $issues = [];
+
+        foreach (array_diff_key($phpProperties, $annotatedProperties) as $snakeName => $phpName) {
+            $issues[] = "property \${$phpName} has no matching #[OA\\Property(property: '{$snakeName}')]";
+        }
+
+        foreach (array_diff_key($annotatedProperties, $phpProperties) as $snakeName => $original) {
+            $issues[] = "#[OA\\Property(property: '{$snakeName}')] has no matching constructor property";
+        }
+
+        return $issues;
+    }
+
+    /**
+     * @param ReflectionClass<Data> $reflection
+     * @return array<string, string> snake-cased property name => original annotated name
+     */
+    private function getAnnotatedPropertyNames(ReflectionClass $reflection, ReflectionMethod $constructor): array
+    {
+        $names = [];
+
+        foreach ($constructor->getParameters() as $parameter) {
+            foreach ($parameter->getAttributes(OA\Property::class) as $attribute) {
+                $property = $attribute->newInstance()->property;
+
+                $names[Str::snake($property)] = $property;
+            }
+        }
+
+        foreach ($reflection->getAttributes(OA\Schema::class) as $attribute) {
+            $properties = $attribute->newInstance()->properties;
+
+            // Vendor @var claims list<Property>, but the real runtime default when `properties:` is
+            // omitted is the Undefined::UNDEFINED sentinel string.
+            // @phpstan-ignore function.alreadyNarrowedType
+            if (! is_array($properties)) {
+                continue;
+            }
+
+            foreach ($properties as $property) {
+                $names[Str::snake($property->property)] = $property->property;
+            }
+        }
+
+        return $names;
+    }
+
     /** @param array<int, array{method: string, uri: string, middleware: string[]}> $undocumented */
     private function reportUndocumented(array $undocumented): void
     {
@@ -351,6 +488,21 @@ class AuditOpenApiSpec extends Command
             ['Method', 'Path'],
             array_map(fn (array $path): array => [strtoupper($path['method']), '/'.$path['path']], $phantom)
         );
+    }
+
+    /** @param array<int, array{class: string, issues: string[]}> $dtoSchemaDrift */
+    private function reportDtoSchemaDrift(array $dtoSchemaDrift): void
+    {
+        if (empty($dtoSchemaDrift)) {
+            return;
+        }
+
+        $this->newLine();
+        $this->line('<fg=red>DTO/schema drift ('.count($dtoSchemaDrift).'):</>');
+
+        foreach ($dtoSchemaDrift as $item) {
+            $this->line('  <fg=red>'.$item['class'].':</> '.implode(', ', $item['issues']));
+        }
     }
 
     /** @param array<int, array{method: string, uri: string, middleware: string[]}> $missingApiMiddleware */
