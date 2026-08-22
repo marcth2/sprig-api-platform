@@ -6,7 +6,7 @@ namespace Tests\Unit\HealthCheck;
 
 use App\HealthCheck\Contracts\HealthCheckInterface;
 use App\HealthCheck\Data\HealthStatusData;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 use App\HealthCheck\Services\HealthCheckerService;
 use Tests\TestCase;
 
@@ -14,8 +14,8 @@ class HealthCheckerServiceTest extends TestCase
 {
     public function test_check_all_returns_results_from_all_checkers(): void
     {
-        $result1 = new HealthStatusData('foo', ServiceStatus::Ok, 200, 1);
-        $result2 = new HealthStatusData('bar', ServiceStatus::Ok, 200, 2);
+        $result1 = new HealthStatusData('foo', ServiceState::Ok, 200, 1);
+        $result2 = new HealthStatusData('bar', ServiceState::Ok, 200, 2);
 
         $checker1 = \Mockery::mock(HealthCheckInterface::class);
         $checker1->shouldReceive('name')->andReturn('foo');
@@ -36,7 +36,7 @@ class HealthCheckerServiceTest extends TestCase
 
     public function test_check_one_returns_result_for_matching_checker(): void
     {
-        $expectedResult = new HealthStatusData('foo', ServiceStatus::Ok, 200, 1);
+        $expectedResult = new HealthStatusData('foo', ServiceState::Ok, 200, 1);
 
         $checker = \Mockery::mock(HealthCheckInterface::class);
         $checker->shouldReceive('name')->andReturn('foo');

@@ -18,8 +18,8 @@ Service readiness checks for DevOps/CI/CD pipelines, monitoring systems, and loc
 ```json
 {
   "service": "redis",
-  "status": "ok|degraded|down",
-  "code": 200,
+  "state": "ok|degraded|down",
+  "status": 200,
   "execution_time_ms": 3,
   "meta": {}
 }

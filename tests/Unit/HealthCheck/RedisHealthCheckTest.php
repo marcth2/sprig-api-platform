@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\HealthCheck;
 
 use App\HealthCheck\Checks\RedisHealthCheck;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 use Illuminate\Support\Facades\Redis;
 use Tests\TestCase;
 
@@ -30,7 +30,7 @@ class RedisHealthCheckTest extends TestCase
 
         $result = (new RedisHealthCheck)->check();
 
-        $this->assertSame(ServiceStatus::Ok, $result->status);
+        $this->assertSame(ServiceState::Ok, $result->state);
         $this->assertSame('redis', $result->service);
         $this->assertSame('7.0.0', $result->meta->version);
         $this->assertSame('1000', $result->meta->usedMemory);
@@ -44,7 +44,7 @@ class RedisHealthCheckTest extends TestCase
         $result = (new RedisHealthCheck)->check();
 
         $this->assertSame('redis', $result->service);
-        $this->assertSame(ServiceStatus::Down, $result->status);
-        $this->assertSame(503, $result->code);
+        $this->assertSame(ServiceState::Down, $result->state);
+        $this->assertSame(503, $result->status);
     }
 }

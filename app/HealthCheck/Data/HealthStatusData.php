@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\HealthCheck\Data;
 
 use App\HealthCheck\Contracts\HealthCheckMetaData;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 use OpenApi\Attributes as OA;
 use Spatie\LaravelData\Attributes\MapOutputName;
 use Spatie\LaravelData\Data;
@@ -15,7 +15,7 @@ use Spatie\LaravelData\Mappers\SnakeCaseMapper;
 #[OA\Schema(
     schema: 'HealthStatusResource',
     description: 'Health status of a single service.',
-    required: ['service', 'status', 'code', 'execution_time_ms'],
+    required: ['service', 'state', 'status', 'execution_time_ms'],
     type: 'object',
 )]
 class HealthStatusData extends Data
@@ -30,7 +30,7 @@ class HealthStatusData extends Data
         public readonly string $service,
 
         #[OA\Property(
-            property: 'status',
+            property: 'state',
             type: 'string',
             enum: ['ok', 'degraded', 'down'],
             description: <<<'TEXT'
@@ -39,15 +39,15 @@ class HealthStatusData extends Data
                 TEXT,
             example: 'ok',
         )]
-        public readonly ServiceStatus $status,
+        public readonly ServiceState $state,
 
         #[OA\Property(
-            property: 'code',
+            property: 'status',
             type: 'integer',
             description: 'HTTP status code mirroring the response status (200 for ok, 503 for degraded or down).',
             example: 200,
         )]
-        public readonly int $code,
+        public readonly int $status,
 
         #[OA\Property(
             property: 'execution_time_ms',

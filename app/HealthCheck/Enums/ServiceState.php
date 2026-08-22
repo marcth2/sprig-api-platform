@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\HealthCheck\Enums;
 
-enum ServiceStatus: string
+enum ServiceState: string
 {
     case Ok = 'ok';
     case Degraded = 'degraded';

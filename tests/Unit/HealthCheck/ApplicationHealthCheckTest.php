@@ -7,7 +7,7 @@ namespace Tests\Unit\HealthCheck;
 use App\HealthCheck\Checks\ApplicationHealthCheck;
 use App\HealthCheck\Data\AppHealthMeta;
 use App\HealthCheck\Data\PhpIniData;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 use Tests\TestCase;
 
 class ApplicationHealthCheckTest extends TestCase
@@ -17,8 +17,8 @@ class ApplicationHealthCheckTest extends TestCase
         $result = (new ApplicationHealthCheck)->check();
 
         $this->assertSame('app', $result->service);
-        $this->assertSame(ServiceStatus::Ok, $result->status);
-        $this->assertSame(200, $result->code);
+        $this->assertSame(ServiceState::Ok, $result->state);
+        $this->assertSame(200, $result->status);
     }
 
     public function test_check_meta_is_app_health_meta_with_php_ini(): void
@@ -52,8 +52,8 @@ class ApplicationHealthCheckTest extends TestCase
         try {
             $result = (new ApplicationHealthCheck)->check();
 
-            $this->assertSame(ServiceStatus::Degraded, $result->status);
-            $this->assertSame(503, $result->code);
+            $this->assertSame(ServiceState::Degraded, $result->state);
+            $this->assertSame(503, $result->status);
             $this->assertContains('maintenance_mode', $result->meta->degradedReasons);
         } finally {
             if (file_exists($downFile)) {
@@ -71,7 +71,7 @@ class ApplicationHealthCheckTest extends TestCase
         $result = (new ApplicationHealthCheck)->check();
 
         $this->assertContains('debug_enabled', $result->meta->degradedReasons);
-        $this->assertSame(ServiceStatus::Degraded, $result->status);
+        $this->assertSame(ServiceState::Degraded, $result->state);
     }
 
     /**

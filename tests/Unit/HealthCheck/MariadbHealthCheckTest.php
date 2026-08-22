@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\HealthCheck;
 
 use App\HealthCheck\Checks\MariadbHealthCheck;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -33,7 +33,7 @@ class MariadbHealthCheckTest extends TestCase
 
         $result = (new MariadbHealthCheck)->check();
 
-        $this->assertSame(ServiceStatus::Ok, $result->status);
+        $this->assertSame(ServiceState::Ok, $result->state);
         $this->assertSame('mariadb', $result->service);
         $this->assertSame('10.11.0-MariaDB', $result->meta->version);
         $this->assertSame(100, $result->meta->maxConnections);
@@ -47,8 +47,8 @@ class MariadbHealthCheckTest extends TestCase
         $result = (new MariadbHealthCheck)->check();
 
         $this->assertSame('mariadb', $result->service);
-        $this->assertSame(ServiceStatus::Down, $result->status);
-        $this->assertSame(503, $result->code);
+        $this->assertSame(ServiceState::Down, $result->state);
+        $this->assertSame(503, $result->status);
     }
 
     public function test_check_against_real_mariadb_returns_ok(): void
@@ -56,8 +56,8 @@ class MariadbHealthCheckTest extends TestCase
         $result = (new MariadbHealthCheck)->check();
 
         $this->assertSame('mariadb', $result->service);
-        $this->assertSame(ServiceStatus::Ok, $result->status);
-        $this->assertSame(200, $result->code);
+        $this->assertSame(ServiceState::Ok, $result->state);
+        $this->assertSame(200, $result->status);
         $this->assertStringContainsString('MariaDB', $result->meta->version);
         $this->assertGreaterThan(0, $result->meta->maxConnections);
         $this->assertGreaterThanOrEqual(1, $result->meta->threadsConnected);

@@ -7,7 +7,7 @@ namespace App\HealthCheck\Checks;
 use App\HealthCheck\Contracts\HealthCheckInterface;
 use App\HealthCheck\Data\HealthStatusData;
 use App\HealthCheck\Data\RedisHealthMeta;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 use Illuminate\Support\Facades\Redis;
 
 class RedisHealthCheck implements HealthCheckInterface
@@ -39,7 +39,7 @@ class RedisHealthCheck implements HealthCheckInterface
 
             $ms = intdiv(hrtime(true) - $start, 1_000_000);
 
-            return new HealthStatusData('redis', ServiceStatus::Ok, 200, $ms, new RedisHealthMeta(
+            return new HealthStatusData('redis', ServiceState::Ok, 200, $ms, new RedisHealthMeta(
                 version: $redisVersion,
                 usedMemory: $usedMemory,
                 connectedClients: $connectedClients,
@@ -47,7 +47,7 @@ class RedisHealthCheck implements HealthCheckInterface
         } catch (\Exception) {
             $ms = intdiv(hrtime(true) - $start, 1_000_000);
 
-            return new HealthStatusData('redis', ServiceStatus::Down, 503, $ms);
+            return new HealthStatusData('redis', ServiceState::Down, 503, $ms);
         }
     }
 }

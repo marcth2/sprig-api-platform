@@ -7,7 +7,7 @@ namespace Tests\Feature\HealthCheck;
 use App\HealthCheck\Data\AppHealthMeta;
 use App\HealthCheck\Data\HealthStatusData;
 use App\HealthCheck\Data\PhpIniData;
-use App\HealthCheck\Enums\ServiceStatus;
+use App\HealthCheck\Enums\ServiceState;
 use App\HealthCheck\Services\HealthCheckerService;
 use Tests\TestCase;
 
@@ -17,9 +17,9 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkAll')->once()->andReturn([
-                new HealthStatusData('laravel', ServiceStatus::Ok, 200, 1),
-                new HealthStatusData('mariadb', ServiceStatus::Ok, 200, 2),
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 3),
+                new HealthStatusData('laravel', ServiceState::Ok, 200, 1),
+                new HealthStatusData('mariadb', ServiceState::Ok, 200, 2),
+                new HealthStatusData('redis', ServiceState::Ok, 200, 3),
             ]);
         });
 
@@ -30,7 +30,7 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('redis')->once()->andReturn(
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2)
+                new HealthStatusData('redis', ServiceState::Ok, 200, 2)
             );
         });
 
@@ -41,7 +41,7 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->once()->andReturn(
-                new HealthStatusData('app', ServiceStatus::Ok, 200, 1, new AppHealthMeta(
+                new HealthStatusData('app', ServiceState::Ok, 200, 1, new AppHealthMeta(
                     appVersion: (string) config('app.version'),
                     phpVersion: PHP_VERSION,
                     frameworkVersion: app()->version(),
@@ -68,7 +68,7 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('redis')->once()->andReturn(
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 2)
+                new HealthStatusData('redis', ServiceState::Ok, 200, 2)
             );
         });
 
@@ -88,9 +88,9 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkAll')->once()->andReturn([
-                new HealthStatusData('laravel', ServiceStatus::Ok, 200, 1),
-                new HealthStatusData('mariadb', ServiceStatus::Down, 503, 2),
-                new HealthStatusData('redis', ServiceStatus::Ok, 200, 3),
+                new HealthStatusData('laravel', ServiceState::Ok, 200, 1),
+                new HealthStatusData('mariadb', ServiceState::Down, 503, 2),
+                new HealthStatusData('redis', ServiceState::Ok, 200, 3),
             ]);
         });
 
@@ -101,7 +101,7 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('mariadb')->once()->andReturn(
-                new HealthStatusData('mariadb', ServiceStatus::Down, 503, 2)
+                new HealthStatusData('mariadb', ServiceState::Down, 503, 2)
             );
         });
 
@@ -112,7 +112,7 @@ class CheckServiceHealthCommandTest extends TestCase
     {
         $this->mock(HealthCheckerService::class, function ($mock): void {
             $mock->shouldReceive('checkOne')->with('app')->once()->andReturn(
-                new HealthStatusData('app', ServiceStatus::Degraded, 200, 1)
+                new HealthStatusData('app', ServiceState::Degraded, 200, 1)
             );
         });
 
