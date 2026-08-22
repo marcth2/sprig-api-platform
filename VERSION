@@ -13,5 +13,5 @@
 #   Minor (1.0.x → 1.1.0)  a wayfinder's worth of change, pre-1.0
 #   Patch (1.0.0 → 1.0.1)  out-of-band bug fixes between wayfinders
 
-APP_VERSION=0.1.2
+APP_VERSION=0.2.0
 API_VERSION=${APP_VERSION}
