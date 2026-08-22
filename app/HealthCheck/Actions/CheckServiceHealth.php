@@ -28,7 +28,7 @@ class CheckServiceHealth
     {
         if ($service === null) {
             $statuses = $this->checker->checkAll();
-            $healthy = collect($statuses)->every(fn (HealthStatusData $s) => $s->state === ServiceState::Ok);
+            $healthy = collect($statuses)->every(fn (HealthStatusData $data) => $data->state === ServiceState::Ok);
 
             return new HealthAggregateData(
                 services: $statuses,
