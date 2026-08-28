@@ -34,7 +34,7 @@ A Laravel 13 platform that starts as a polished, reusable team starter template 
 docker compose up -d
 
 # First-run setup: composer install, .env, key:generate, migrate,
-# npm install + build, and the pre-commit hook (Pint + PHPStan)
+# and the pre-commit hook (Pint + PHPStan)
 docker compose exec app composer setup
 
 # Generate OpenAPI spec (storage/api-docs/ is gitignored)

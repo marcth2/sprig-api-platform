@@ -45,7 +45,7 @@ FROM base AS dev
 ARG UID=1000
 ARG GID=1000
 
-RUN apk add --no-cache su-exec linux-headers $PHPIZE_DEPS \
+RUN apk add --no-cache su-exec linux-headers git $PHPIZE_DEPS \
     && pecl install xdebug \
     && docker-php-ext-enable xdebug \
     && apk del $PHPIZE_DEPS
@@ -54,6 +54,10 @@ RUN apk add --no-cache su-exec linux-headers $PHPIZE_DEPS \
 # are owned by the developer rather than root.
 RUN addgroup -g ${GID} -S app \
     && adduser -u ${UID} -S -G app app
+
+# The bind-mounted repo is host-owned; git refuses to operate across that
+# ownership mismatch (dubious ownership) when run as this stage's exec user.
+RUN git config --system --add safe.directory /var/www/html
 
 COPY docker/php/phpstan.ini /usr/local/etc/php/conf.d/phpstan.ini
 COPY docker/php/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
