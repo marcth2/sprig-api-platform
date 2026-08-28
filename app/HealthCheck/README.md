@@ -79,23 +79,23 @@ docker compose exec app php artisan health:check redis
 **Aggregate output:**
 
 ```
-+---------+--------+------+-----------+
-| Service | Status | Code | Time (ms) |
-+---------+--------+------+-----------+
-| app     | ok     | 200  | 2         |
-| mariadb | ok     | 200  | 5         |
-| redis   | ok     | 200  | 1         |
-+---------+--------+------+-----------+
++---------+--------+--------+-----------+
+| Service | State  | Status | Time (ms) |
++---------+--------+--------+-----------+
+| app     | ok     | 200    | 2         |
+| mariadb | ok     | 200    | 5         |
+| redis   | ok     | 200    | 1         |
++---------+--------+--------+-----------+
 ```
 
 **Single-service output** (meta shown when present):
 
 ```
-+---------+--------+------+-----------+
-| Service | Status | Code | Time (ms) |
-+---------+--------+------+-----------+
-| app     | ok     | 200  | 0         |
-+---------+--------+------+-----------+
++---------+--------+--------+-----------+
+| Service | State  | Status | Time (ms) |
++---------+--------+--------+-----------+
+| app     | ok     | 200    | 0         |
++---------+--------+--------+-----------+
 +----------------------------+--------+
 | Key                        | Value  |
 +----------------------------+--------+
@@ -158,8 +158,8 @@ curl -s \
   "services": [
     {
       "service": "app",
-      "status": "ok",
-      "code": 200,
+      "state": "ok",
+      "status": 200,
       "execution_time_ms": 2,
       "meta": {
         "app_version": "0.1.2",
@@ -167,34 +167,40 @@ curl -s \
         "framework_version": "13.x",
         "environment": "local",
         "maintenance_mode": false,
-        "degraded_reasons": []
+        "degraded_reasons": [],
+        "php_ini": {
+          "memory_limit": "128M",
+          "max_execution_time": "30",
+          "post_max_size": "8M",
+          "opcache_enabled": true
+        }
       }
     },
     {
       "service": "mariadb",
-      "status": "ok",
-      "code": 200,
+      "state": "ok",
+      "status": 200,
       "execution_time_ms": 5,
       "meta": {
         "version": "11.x-MariaDB",
-        "max_connections": "151",
-        "threads_connected": "1"
+        "max_connections": 151,
+        "threads_connected": 1
       }
     },
     {
       "service": "redis",
-      "status": "ok",
-      "code": 200,
+      "state": "ok",
+      "status": 200,
       "execution_time_ms": 1,
       "meta": {
         "version": "7.x",
-        "used_memory": "1.01M",
-        "connected_clients": "1"
+        "used_memory": "1048576",
+        "connected_clients": 1
       }
     }
   ],
   "healthy": true,
-  "checked_at": "2026-06-26T10:00:00.000000Z"
+  "checked_at": "2026-06-26T10:00:00+00:00"
 }
 ```
 
@@ -205,28 +211,28 @@ curl -s \
   "services": [
     {
       "service": "app",
-      "status": "ok",
-      "code": 200,
+      "state": "ok",
+      "status": 200,
       "execution_time_ms": 1,
       "meta": { "..." : "..." }
     },
     {
       "service": "mariadb",
-      "status": "down",
-      "code": 503,
+      "state": "down",
+      "status": 503,
       "execution_time_ms": 3,
       "meta": {}
     },
     {
       "service": "redis",
-      "status": "ok",
-      "code": 200,
+      "state": "ok",
+      "status": 200,
       "execution_time_ms": 1,
       "meta": { "..." : "..." }
     }
   ],
   "healthy": false,
-  "checked_at": "2026-06-26T10:00:00.000000Z"
+  "checked_at": "2026-06-26T10:00:00+00:00"
 }
 ```
 
@@ -234,7 +240,8 @@ curl -s \
 
 ```json
 {
-  "message": "Unauthenticated."
+  "message": "Unauthenticated.",
+  "status": 401
 }
 ```
 
@@ -242,7 +249,8 @@ curl -s \
 
 ```json
 {
-  "message": "Unknown service"
+  "message": "Unknown service: unknown",
+  "status": 404
 }
 ```
 
