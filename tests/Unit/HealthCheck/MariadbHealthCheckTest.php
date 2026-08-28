@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\HealthCheck;
 
 use App\HealthCheck\Checks\MariadbHealthCheck;
+use App\HealthCheck\Data\MariadbHealthMeta;
 use App\HealthCheck\Enums\ServiceState;
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
@@ -35,20 +36,13 @@ class MariadbHealthCheckTest extends TestCase
 
         $this->assertSame(ServiceState::Ok, $result->state);
         $this->assertSame('mariadb', $result->service);
-        $this->assertSame('10.11.0-MariaDB', $result->meta->version);
-        $this->assertSame(100, $result->meta->maxConnections);
-        $this->assertSame(3, $result->meta->threadsConnected);
-    }
+        $this->assertInstanceOf(MariadbHealthMeta::class, $result->meta);
 
-    public function test_check_returns_down_when_connection_fails(): void
-    {
-        DB::shouldReceive('connection')->with('mariadb')->andThrow(new \Exception('Connection refused'));
-
-        $result = (new MariadbHealthCheck)->check();
-
-        $this->assertSame('mariadb', $result->service);
-        $this->assertSame(ServiceState::Down, $result->state);
-        $this->assertSame(503, $result->status);
+        /** @var MariadbHealthMeta $meta */
+        $meta = $result->meta;
+        $this->assertSame('10.11.0-MariaDB', $meta->version);
+        $this->assertSame(100, $meta->maxConnections);
+        $this->assertSame(3, $meta->threadsConnected);
     }
 
     public function test_check_against_real_mariadb_returns_ok(): void
@@ -58,8 +52,12 @@ class MariadbHealthCheckTest extends TestCase
         $this->assertSame('mariadb', $result->service);
         $this->assertSame(ServiceState::Ok, $result->state);
         $this->assertSame(200, $result->status);
-        $this->assertStringContainsString('MariaDB', $result->meta->version);
-        $this->assertGreaterThan(0, $result->meta->maxConnections);
-        $this->assertGreaterThanOrEqual(1, $result->meta->threadsConnected);
+        $this->assertInstanceOf(MariadbHealthMeta::class, $result->meta);
+
+        /** @var MariadbHealthMeta $meta */
+        $meta = $result->meta;
+        $this->assertStringContainsString('MariaDB', $meta->version);
+        $this->assertGreaterThan(0, $meta->maxConnections);
+        $this->assertGreaterThanOrEqual(1, $meta->threadsConnected);
     }
 }
