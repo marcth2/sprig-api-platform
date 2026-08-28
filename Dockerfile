@@ -1,6 +1,6 @@
 #################################################################
 # Sprig API Platform Dockerfile
-# Multi-stage: base → dev / ci / release
+# Multi-stage: base → dev / ci
 # Web server: Nginx + PHP-FPM (separate containers via docker-compose)
 #################################################################
 
@@ -76,23 +76,3 @@ RUN apk add --no-cache $PHPIZE_DEPS \
     && pecl install pcov \
     && docker-php-ext-enable pcov \
     && apk del $PHPIZE_DEPS
-
-#################################################################
-# RELEASE IMAGE — OPcache on, permissions set, healthcheck
-#################################################################
-
-FROM base AS release
-
-# OPcache for production performance
-RUN docker-php-ext-enable opcache
-COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
-
-# Laravel recommended storage + cache permissions
-RUN find /var/www/html/storage -type d -exec chmod 755 {} \; 2>/dev/null || true \
-    && find /var/www/html/storage -type f -exec chmod 644 {} \; 2>/dev/null || true \
-    && find /var/www/html/bootstrap/cache -type d -exec chmod 755 {} \; 2>/dev/null || true \
-    && find /var/www/html/bootstrap/cache -type f -exec chmod 644 {} \; 2>/dev/null || true \
-    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost/up || exit 1
