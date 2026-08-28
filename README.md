@@ -33,16 +33,12 @@ A Laravel 13 platform that starts as a polished, reusable team starter template 
 # Start all services
 docker compose up -d
 
-# First-run setup
-docker compose exec app composer install
-docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate
+# First-run setup: composer install, .env, key:generate, migrate,
+# npm install + build, and the pre-commit hook (Pint + PHPStan)
+docker compose exec app composer setup
 
 # Generate OpenAPI spec (storage/api-docs/ is gitignored)
 docker compose exec app php artisan l5-swagger:generate
-
-# Enable the pre-commit hook (Pint + PHPStan on staged PHP files)
-git config core.hooksPath .githooks
 ```
 
 ---
