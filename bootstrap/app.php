@@ -48,7 +48,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json(new ApiErrorData($e->getMessage(), 422, $e->errors()), 422);
+                /** @var array<string, array<int, string>> $errors */
+                $errors = $e->errors();
+
+                return response()->json(new ApiErrorData($e->getMessage(), 422, $errors), 422);
             }
         });
 

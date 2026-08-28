@@ -5,6 +5,7 @@ parameters:
     level: max
     paths:
         - app
+        - bootstrap
     bootstrapFiles:
         - phpstan-bootstrap.php
     reportUnmatchedIgnoredErrors: true
