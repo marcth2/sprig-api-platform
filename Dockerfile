@@ -45,10 +45,20 @@ FROM base AS dev
 ARG UID=1000
 ARG GID=1000
 
-RUN apk add --no-cache su-exec linux-headers $PHPIZE_DEPS \
+RUN apk add --no-cache su-exec linux-headers git $PHPIZE_DEPS \
     && pecl install xdebug \
     && docker-php-ext-enable xdebug \
-    && apk del $PHPIZE_DEPS
+    && apk del $PHPIZE_DEPS \
+    && git config --system --add safe.directory /var/www/html
+
+# Node — version pinned to .nvmrc, copied from the official Alpine image
+# rather than apk (whose Node package version can't be pinned precisely).
+# Only the dev image needs npm (composer setup's asset build); CI and
+# release never invoke it.
+COPY --from=node:26.7.0-alpine /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:26.7.0-alpine /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
 # Create a non-root user matching the host UID/GID so bind-mounted files
 # are owned by the developer rather than root.
