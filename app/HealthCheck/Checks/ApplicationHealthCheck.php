@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\HealthCheck\Checks;
 
-use App\HealthCheck\Contracts\HealthCheckInterface;
 use App\HealthCheck\Data\AppHealthMeta;
-use App\HealthCheck\Data\HealthStatusData;
+use App\HealthCheck\Data\HealthProbeResult;
 use App\HealthCheck\Data\PhpIniData;
 use App\HealthCheck\Enums\ServiceState;
 
-class ApplicationHealthCheck implements HealthCheckInterface
+class ApplicationHealthCheck extends TimedHealthCheck
 {
     private const int MIN_MEMORY_LIMIT_MB = 128;
 
@@ -19,10 +18,8 @@ class ApplicationHealthCheck implements HealthCheckInterface
         return 'app';
     }
 
-    public function check(): HealthStatusData
+    protected function probe(): HealthProbeResult
     {
-        $start = hrtime(true);
-
         /** @var list<string> $degraded */
         $degraded = [];
 
@@ -45,8 +42,6 @@ class ApplicationHealthCheck implements HealthCheckInterface
         }
 
         $state = empty($degraded) ? ServiceState::Ok : ServiceState::Degraded;
-        $code = $state === ServiceState::Ok ? 200 : 503;
-        $ms = intdiv(hrtime(true) - $start, 1_000_000);
 
         $appVersion = config('app.version');
         $appVersion = is_string($appVersion) ? $appVersion : '0.0.0-unversioned';
@@ -54,7 +49,7 @@ class ApplicationHealthCheck implements HealthCheckInterface
         $postMaxSize = ini_get('post_max_size');
         $postMaxSize = is_string($postMaxSize) ? $postMaxSize : '';
 
-        return new HealthStatusData('app', $state, $code, $ms, new AppHealthMeta(
+        return new HealthProbeResult($state, new AppHealthMeta(
             appVersion: $appVersion,
             phpVersion: PHP_VERSION,
             frameworkVersion: app()->version(),
