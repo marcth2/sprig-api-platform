@@ -12,6 +12,8 @@
     <file>routes</file>
     <file>tests</file>
 
+    <exclude-pattern>bootstrap/cache/*</exclude-pattern>
+
     <rule ref="Generic.Files.LineLength">
         <properties>
             <property name="lineLimit" value="120"/>
