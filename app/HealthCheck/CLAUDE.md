@@ -28,13 +28,14 @@ Service readiness checks for DevOps/CI/CD pipelines, monitoring systems, and loc
 `meta` is a generic object on the wire (`HealthStatusResource`'s OpenAPI contract stays untyped there), but each checker builds it from a typed `HealthCheckMetaData` implementation — see `AppHealthMeta`, `MariadbHealthMeta`, and `RedisHealthMeta` in `app/HealthCheck/Data/`. The down/failure path and any service with nothing to report use `EmptyHealthMeta`, which serializes to `[]`.
 
 ## How to Add a New Service
-1. Create `app/HealthCheck/Checks/YourServiceHealthCheck.php` implementing `HealthCheckInterface`
+1. Create `app/HealthCheck/Checks/YourServiceHealthCheck.php` extending `TimedHealthCheck` (not implementing `HealthCheckInterface` directly)
    - `name(): string` — returns the service key (e.g. `'postgres'`)
-   - `check(): HealthStatusData` — uses `hrtime(true)` for timing, catches exceptions → `ServiceStatus::Down`
+   - `protected function probe(): HealthProbeResult` — your probe logic. Return `new HealthProbeResult(meta: new YourServiceHealthMeta(...))` on success (state defaults to `ServiceState::Ok`); let exceptions propagate — `TimedHealthCheck::check()` catches them and converts to `ServiceState::Down`. Only return a non-default `state` explicitly if your probe can be `Degraded` without throwing (see `ApplicationHealthCheck`)
+   - `TimedHealthCheck` (`app/HealthCheck/Checks/TimedHealthCheck.php`) owns `hrtime(true)` timing, exception-to-`Down` conversion, and HTTP status derivation from state — none of that belongs in your `probe()`
 2. Register the class in `config/health-check.php` under the `checks` array
-3. Create a `YourServiceHealthMeta` class in `app/HealthCheck/Data/` implementing `HealthCheckMetaData` for any service-specific fields, and construct it inside `check()`. Use `EmptyHealthMeta` (the `HealthStatusData::$meta` default) if the service has nothing extra to report
+3. Create a `YourServiceHealthMeta` class in `app/HealthCheck/Data/` implementing `HealthCheckMetaData` for any service-specific fields, and construct it inside `probe()`. Use `EmptyHealthMeta` (the `HealthProbeResult::$meta` default) if the service has nothing extra to report
 4. Add an `OA\Schema` to the new meta class documenting its shape; OA path format is `/api/health` and `/api/health/{service}` (no version prefix in URL — version is header-negotiated)
-5. Write unit tests in `tests/Unit/HealthCheck/YourServiceHealthCheckTest.php` — mock the relevant facade
+5. Write unit tests in `tests/Unit/HealthCheck/YourServiceHealthCheckTest.php` — mock the relevant facade. Don't duplicate a "returns down on failure" test per checker; that path lives in `TimedHealthCheck` and is covered once by `TimedHealthCheckTest`
 6. Every `Checks/` implementation must also have at least one test that exercises the real external system (not a mock) — either test layer (Unit or Feature) satisfies this
 
 ## Architecture Notes

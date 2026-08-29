@@ -4,50 +4,39 @@ declare(strict_types=1);
 
 namespace App\HealthCheck\Checks;
 
-use App\HealthCheck\Contracts\HealthCheckInterface;
-use App\HealthCheck\Data\HealthStatusData;
+use App\HealthCheck\Data\HealthProbeResult;
 use App\HealthCheck\Data\RedisHealthMeta;
-use App\HealthCheck\Enums\ServiceState;
 use Illuminate\Support\Facades\Redis;
 
-class RedisHealthCheck implements HealthCheckInterface
+class RedisHealthCheck extends TimedHealthCheck
 {
     public function name(): string
     {
         return 'redis';
     }
 
-    public function check(): HealthStatusData
+    protected function probe(): HealthProbeResult
     {
-        $start = hrtime(true);
-        try {
-            $connection = Redis::connection('default');
+        $connection = Redis::connection('default');
 
-            $connection->ping();
+        $connection->ping();
 
-            /** @var array<string, mixed> $info */
-            $info = $connection->info();
+        /** @var array<string, mixed> $info */
+        $info = $connection->info();
 
-            $hasVersion = isset($info['redis_version']) && is_string($info['redis_version']);
-            $redisVersion = $hasVersion ? $info['redis_version'] : 'unknown';
+        $hasVersion = isset($info['redis_version']) && is_string($info['redis_version']);
+        $redisVersion = $hasVersion ? $info['redis_version'] : 'unknown';
 
-            $hasMemory = is_string($info['used_memory'] ?? null) || is_int($info['used_memory'] ?? null);
-            $usedMemory = $hasMemory ? (string) $info['used_memory'] : 'unknown';
+        $hasMemory = is_string($info['used_memory'] ?? null) || is_int($info['used_memory'] ?? null);
+        $usedMemory = $hasMemory ? (string) $info['used_memory'] : 'unknown';
 
-            $hasClients = isset($info['connected_clients']) && is_numeric($info['connected_clients']);
-            $connectedClients = $hasClients ? (int) $info['connected_clients'] : 0;
+        $hasClients = isset($info['connected_clients']) && is_numeric($info['connected_clients']);
+        $connectedClients = $hasClients ? (int) $info['connected_clients'] : 0;
 
-            $ms = intdiv(hrtime(true) - $start, 1_000_000);
-
-            return new HealthStatusData('redis', ServiceState::Ok, 200, $ms, new RedisHealthMeta(
-                version: $redisVersion,
-                usedMemory: $usedMemory,
-                connectedClients: $connectedClients,
-            ));
-        } catch (\Exception) {
-            $ms = intdiv(hrtime(true) - $start, 1_000_000);
-
-            return new HealthStatusData('redis', ServiceState::Down, 503, $ms);
-        }
+        return new HealthProbeResult(meta: new RedisHealthMeta(
+            version: $redisVersion,
+            usedMemory: $usedMemory,
+            connectedClients: $connectedClients,
+        ));
     }
 }
