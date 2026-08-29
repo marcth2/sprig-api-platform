@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shared\Data;
 
+use Illuminate\Http\Response;
 use OpenApi\Attributes as OA;
 use Spatie\LaravelData\Data;
 
@@ -17,7 +18,7 @@ use Spatie\LaravelData\Data;
             property: 'status',
             description: 'HTTP status code mirroring the response status.',
             type: 'integer',
-            example: 404,
+            example: Response::HTTP_NOT_FOUND,
         ),
         new OA\Property(
             property: 'errors',

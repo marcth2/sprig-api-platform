@@ -11,6 +11,7 @@ use App\HealthCheck\Services\HealthCheckerService;
 use Illuminate\Console\Command;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Lorisleiva\Actions\Concerns\AsAction;
 use OpenApi\Attributes as OA;
 
@@ -53,7 +54,7 @@ class CheckServiceHealth
         tags: ['HealthCheck'],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'Every registered service is reachable and operational.',
                 content: new OA\JsonContent(
                     ref: '#/components/schemas/HealthAggregateResource',
@@ -66,7 +67,7 @@ class CheckServiceHealth
                                     [
                                         'service' => 'app',
                                         'state' => 'ok',
-                                        'status' => 200,
+                                        'status' => Response::HTTP_OK,
                                         'execution_time_ms' => 2,
                                         'meta' => [
                                             'app_version' => '1.2.0',
@@ -86,7 +87,7 @@ class CheckServiceHealth
                                     [
                                         'service' => 'mariadb',
                                         'state' => 'ok',
-                                        'status' => 200,
+                                        'status' => Response::HTTP_OK,
                                         'execution_time_ms' => 1,
                                         'meta' => [
                                             'version' => '10.11.0-MariaDB',
@@ -97,7 +98,7 @@ class CheckServiceHealth
                                     [
                                         'service' => 'redis',
                                         'state' => 'ok',
-                                        'status' => 200,
+                                        'status' => Response::HTTP_OK,
                                         'execution_time_ms' => 1,
                                         'meta' => [
                                             'version' => '7.0.0',
@@ -113,9 +114,9 @@ class CheckServiceHealth
                     ]
                 )
             ),
-            new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedError'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, ref: '#/components/responses/UnauthorizedError'),
             new OA\Response(
-                response: 503,
+                response: Response::HTTP_SERVICE_UNAVAILABLE,
                 description: 'One or more services are degraded or unreachable.',
                 content: new OA\JsonContent(
                     ref: '#/components/schemas/HealthAggregateResource',
@@ -128,7 +129,7 @@ class CheckServiceHealth
                                     [
                                         'service' => 'app',
                                         'state' => 'ok',
-                                        'status' => 200,
+                                        'status' => Response::HTTP_OK,
                                         'execution_time_ms' => 2,
                                         'meta' => [
                                             'app_version' => '1.2.0',
@@ -148,14 +149,14 @@ class CheckServiceHealth
                                     [
                                         'service' => 'mariadb',
                                         'state' => 'down',
-                                        'status' => 503,
+                                        'status' => Response::HTTP_SERVICE_UNAVAILABLE,
                                         'execution_time_ms' => 2001,
                                         'meta' => [],
                                     ],
                                     [
                                         'service' => 'redis',
                                         'state' => 'ok',
-                                        'status' => 200,
+                                        'status' => Response::HTTP_OK,
                                         'execution_time_ms' => 1,
                                         'meta' => [
                                             'version' => '7.0.0',
@@ -198,7 +199,7 @@ class CheckServiceHealth
         ],
         responses: [
             new OA\Response(
-                response: 200,
+                response: Response::HTTP_OK,
                 description: 'The requested service is reachable and operational.',
                 content: new OA\JsonContent(
                     ref: '#/components/schemas/HealthStatusResource',
@@ -209,7 +210,7 @@ class CheckServiceHealth
                             value: [
                                 'service' => 'redis',
                                 'state' => 'ok',
-                                'status' => 200,
+                                'status' => Response::HTTP_OK,
                                 'execution_time_ms' => 3,
                                 'meta' => ['version' => '7.0.0', 'used_memory' => '1048576', 'connected_clients' => 4],
                             ]
@@ -217,9 +218,9 @@ class CheckServiceHealth
                     ]
                 )
             ),
-            new OA\Response(response: 401, ref: '#/components/responses/UnauthorizedError'),
+            new OA\Response(response: Response::HTTP_UNAUTHORIZED, ref: '#/components/responses/UnauthorizedError'),
             new OA\Response(
-                response: 404,
+                response: Response::HTTP_NOT_FOUND,
                 description: 'The service name is not recognised by the health check registry.',
                 content: new OA\JsonContent(
                     ref: '#/components/schemas/ErrorResponse',
@@ -227,13 +228,13 @@ class CheckServiceHealth
                         new OA\Examples(
                             example: 'unknown-service',
                             summary: 'Unknown service',
-                            value: ['message' => 'Unknown service', 'status' => 404]
+                            value: ['message' => 'Unknown service', 'status' => Response::HTTP_NOT_FOUND]
                         ),
                     ]
                 )
             ),
             new OA\Response(
-                response: 503,
+                response: Response::HTTP_SERVICE_UNAVAILABLE,
                 description: 'The requested service is degraded or unreachable.',
                 content: new OA\JsonContent(ref: '#/components/schemas/HealthStatusResource')
             ),
@@ -244,7 +245,7 @@ class CheckServiceHealth
         $result = $this->handle($service);
 
         if ($result instanceof HealthAggregateData) {
-            return response()->json($result, $result->healthy ? 200 : 503);
+            return response()->json($result, $result->healthy ? Response::HTTP_OK : Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
         return response()->json($result, $result->status);
