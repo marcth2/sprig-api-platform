@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\OpenApiAudit\AuditContext;
+use App\Console\Commands\OpenApiAudit\AuditFinding;
+use App\Console\Commands\OpenApiAudit\AuditRule;
+use App\Console\Commands\OpenApiAudit\AuditSeverity;
+use App\Console\Commands\OpenApiAudit\Rules\DtoSchemaDriftRule;
+use App\Console\Commands\OpenApiAudit\Rules\IncompleteAnnotationsRule;
+use App\Console\Commands\OpenApiAudit\Rules\MissingApiMiddlewareRule;
+use App\Console\Commands\OpenApiAudit\Rules\PhantomPathsRule;
+use App\Console\Commands\OpenApiAudit\Rules\UndocumentedRoutesRule;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Route as RouteFacade;
-use Illuminate\Support\Str;
-use OpenApi\Attributes as OA;
-use ReflectionClass;
-use ReflectionMethod;
-use Spatie\LaravelData\Data;
-use Symfony\Component\Finder\Finder;
 use Symfony\Component\Yaml\Yaml;
 
 class AuditOpenApiSpec extends Command
@@ -41,14 +43,6 @@ class AuditOpenApiSpec extends Command
 
         /** @var array<string, mixed> $spec */
         $spec = Yaml::parseFile($specFile);
-        $specPaths = $this->extractSpecPaths($spec);
-        $allRoutes = $this->getAllRoutes();
-        $routes = $this->filterApiRoutes($allRoutes);
-
-        $undocumented = $this->findUndocumented($routes, $specPaths);
-        $phantom = $this->findPhantom($routes, $specPaths);
-        $incomplete = $this->findIncomplete($routes, $specPaths);
-        $missingApiMiddleware = $this->findMissingApiMiddleware($allRoutes);
 
         $dtoDirOption = $this->option('dto-dir');
         $dtoDir = is_string($dtoDirOption) ? $dtoDirOption : app_path();
@@ -56,483 +50,118 @@ class AuditOpenApiSpec extends Command
         $dtoNamespaceOption = $this->option('dto-namespace');
         $dtoNamespace = is_string($dtoNamespaceOption) ? $dtoNamespaceOption : 'App\\';
 
-        $dtoSchemaDrift = $this->findDtoSchemaDrift($dtoDir, $dtoNamespace);
+        $context = AuditContext::fromCommandOptions($spec, $dtoDir, $dtoNamespace);
 
-        $this->reportUndocumented($undocumented);
-        $this->reportPhantom($phantom);
-        $this->reportDtoSchemaDrift($dtoSchemaDrift);
-        $this->reportMissingApiMiddleware($missingApiMiddleware);
-        $this->reportIncomplete($incomplete);
+        $results = $this->runRules($context);
 
-        $hasErrors = count($undocumented) > 0 || count($phantom) > 0 || count($dtoSchemaDrift) > 0;
-        $hasWarnings = count($incomplete) > 0 || count($missingApiMiddleware) > 0;
+        $this->renderFindings($results);
 
-        if ($hasErrors) {
-            $total = count($undocumented) + count($phantom) + count($dtoSchemaDrift);
+        $errorCount = $this->countFindings($results, AuditSeverity::Error);
+
+        if ($errorCount > 0) {
             $this->newLine();
-            $this->error("Audit failed: {$total} error(s).");
+            $this->error("Audit failed: {$errorCount} error(s).");
 
             return self::FAILURE;
         }
 
-        if ($hasWarnings && $this->option('fail-on-warnings')) {
-            $totalWarnings = count($incomplete) + count($missingApiMiddleware);
+        $warningCount = $this->countFindings($results, AuditSeverity::Warning);
+
+        if ($warningCount > 0 && $this->option('fail-on-warnings')) {
             $this->newLine();
-            $this->error("Audit failed: {$totalWarnings} warning(s) found (--fail-on-warnings).");
+            $this->error("Audit failed: {$warningCount} warning(s) found (--fail-on-warnings).");
 
             return self::FAILURE;
         }
 
         $this->newLine();
-        $this->table(
-            ['Check', 'Result'],
-            [
-                ['Routes audited', (string) count($routes)],
-                ['Spec paths', (string) count($specPaths)],
-                ['Undocumented routes', (string) count($undocumented)],
-                ['Phantom spec paths', (string) count($phantom)],
-                ['DTO/schema drift', (string) count($dtoSchemaDrift)],
-                [
-                    'Routes missing api middleware',
-                    count($missingApiMiddleware) > 0 ? count($missingApiMiddleware).' warning(s)' : '0',
-                ],
-                ['Incomplete annotations', count($incomplete) > 0 ? count($incomplete).' warning(s)' : '0'],
-            ]
-        );
+        $this->table(['Check', 'Result'], $this->summaryRows($context, $results));
 
-        $totalWarnings = count($incomplete) + count($missingApiMiddleware);
-        $warningNote = $hasWarnings ? " ({$totalWarnings} warning(s))" : '';
+        $warningNote = $warningCount > 0 ? " ({$warningCount} warning(s))" : '';
         $this->info("Audit passed{$warningNote}.");
 
         return self::SUCCESS;
     }
 
-    /**
-     * @param array<string, mixed> $spec
-     * @return array<int, array{method: string, path: string, operation: array<string, mixed>}>
-     */
-    private function extractSpecPaths(array $spec): array
+    /** @return AuditRule[] */
+    private function rules(): array
     {
-        $paths = [];
-        $pathsData = $spec['paths'] ?? null;
-
-        if (! is_array($pathsData)) {
-            return [];
-        }
-
-        foreach ($pathsData as $path => $pathItem) {
-            $normalizedPath = ltrim((string) $path, '/');
-
-            if (! is_array($pathItem)) {
-                continue;
-            }
-
-            foreach ($pathItem as $method => $operation) {
-                if (! in_array($method, ['get', 'post', 'put', 'patch', 'delete'])) {
-                    continue;
-                }
-
-                /** @var array<string, mixed> $operationData */
-                $operationData = is_array($operation) ? $operation : [];
-
-                $paths[] = [
-                    'method' => (string) $method,
-                    'path' => $normalizedPath,
-                    'operation' => $operationData,
-                ];
-            }
-        }
-
-        return $paths;
+        return [
+            new UndocumentedRoutesRule,
+            new PhantomPathsRule,
+            new IncompleteAnnotationsRule,
+            new MissingApiMiddlewareRule,
+            new DtoSchemaDriftRule,
+        ];
     }
 
-    /**
-     * All routes except the l5-swagger UI/docs routes themselves.
-     *
-     * @return array<int, array{method: string, uri: string, middleware: string[]}>
-     */
-    private function getAllRoutes(): array
+    /** @return array<int, array{rule: AuditRule, findings: array<int, AuditFinding>}> */
+    private function runRules(AuditContext $context): array
     {
-        $routes = [];
-
-        foreach (RouteFacade::getRoutes()->getRoutes() as $route) {
-            /** @var string[] $middleware */
-            $middleware = $route->middleware();
-
-            if ($this->isL5SwaggerRoute($middleware)) {
-                continue;
-            }
-
-            /** @var string[] $httpMethods */
-            $httpMethods = $route->methods();
-
-            foreach ($httpMethods as $method) {
-                if ($method === 'HEAD') {
-                    continue;
-                }
-
-                $routes[] = [
-                    'method' => strtolower($method),
-                    'uri' => $route->uri(),
-                    'middleware' => $middleware,
-                ];
-            }
-        }
-
-        return $routes;
-    }
-
-    /**
-     * @param array<int, array{method: string, uri: string, middleware: string[]}> $routes
-     * @return array<int, array{method: string, uri: string, middleware: string[]}>
-     */
-    private function filterApiRoutes(array $routes): array
-    {
-        return array_values(array_filter(
-            $routes,
-            fn (array $route): bool => in_array('api', $route['middleware'])
+        return array_values(array_map(
+            fn (AuditRule $rule): array => ['rule' => $rule, 'findings' => $rule->audit($context)],
+            $this->rules()
         ));
     }
 
-    /** @param string[] $middleware */
-    private function isL5SwaggerRoute(array $middleware): bool
+    /** @param array<int, array{rule: AuditRule, findings: array<int, AuditFinding>}> $results */
+    private function countFindings(array $results, AuditSeverity $severity): int
     {
-        foreach ($middleware as $middlewareEntry) {
-            if (str_contains($middlewareEntry, 'L5Swagger')) {
-                return true;
+        $count = 0;
+
+        foreach ($results as $result) {
+            if ($result['rule']->severity() === $severity) {
+                $count += count($result['findings']);
             }
         }
 
-        return false;
+        return $count;
     }
 
-    /**
-     * A route under api/ that skipped the api middleware group is invisible to every other
-     * check below — it never reaches $routes, so it can't be flagged undocumented either.
-     * That's exactly how a misrouted domain would pass the audit clean while fully undocumented.
-     *
-     * @param array<int, array{method: string, uri: string, middleware: string[]}> $routes
-     * @return array<int, array{method: string, uri: string, middleware: string[]}>
-     */
-    private function findMissingApiMiddleware(array $routes): array
+    /** @param array<int, array{rule: AuditRule, findings: array<int, AuditFinding>}> $results */
+    private function renderFindings(array $results): void
     {
-        return array_values(array_filter(
-            $routes,
-            fn (array $route): bool => str_starts_with($route['uri'], 'api/') && ! in_array('api', $route['middleware'])
-        ));
-    }
+        foreach ($results as $result) {
+            $findings = $result['findings'];
 
-    /**
-     * @param array<int, array{method: string, uri: string, middleware: string[]}> $routes
-     * @param array<int, array{method: string, path: string, operation: array<string, mixed>}> $specPaths
-     * @return array<int, array{method: string, uri: string, middleware: string[]}>
-     */
-    private function findUndocumented(array $routes, array $specPaths): array
-    {
-        $specSignatures = array_map(fn (array $path): string => $path['method'].':'.$path['path'], $specPaths);
-
-        return array_values(array_filter(
-            $routes,
-            fn (array $route): bool => ! in_array($route['method'].':'.$route['uri'], $specSignatures)
-        ));
-    }
-
-    /**
-     * Only api/ prefixed paths are checked — non-api paths (e.g. /up) are excluded from phantom detection.
-     *
-     * @param array<int, array{method: string, uri: string, middleware: string[]}> $routes
-     * @param array<int, array{method: string, path: string, operation: array<string, mixed>}> $specPaths
-     * @return array<int, array{method: string, path: string, operation: array<string, mixed>}>
-     */
-    private function findPhantom(array $routes, array $specPaths): array
-    {
-        $routeSignatures = array_map(fn (array $route): string => $route['method'].':'.$route['uri'], $routes);
-
-        return array_values(array_filter(
-            $specPaths,
-            fn (array $path): bool => str_starts_with($path['path'], 'api/')
-                && ! in_array($path['method'].':'.$path['path'], $routeSignatures)
-        ));
-    }
-
-    /**
-     * @param array<int, array{method: string, uri: string, middleware: string[]}> $routes
-     * @param array<int, array{method: string, path: string, operation: array<string, mixed>}> $specPaths
-     * @return array<int, array{route: string, issues: string[]}>
-     */
-    private function findIncomplete(array $routes, array $specPaths): array
-    {
-        $specBySignature = [];
-        foreach ($specPaths as $path) {
-            $specBySignature[$path['method'].':'.$path['path']] = $path['operation'];
-        }
-
-        $operationIdCounts = $this->countOperationIds($specPaths);
-
-        $issues = [];
-
-        foreach ($routes as $route) {
-            $sig = $route['method'].':'.$route['uri'];
-
-            if (! isset($specBySignature[$sig])) {
+            if (empty($findings)) {
                 continue;
             }
 
-            $operation = $specBySignature[$sig];
-            $routeIssues = [];
+            $rule = $result['rule'];
+            $color = $rule->severity() === AuditSeverity::Error ? 'red' : 'yellow';
+            $warningSuffix = $rule->severity() === AuditSeverity::Warning ? ' — warnings' : '';
 
-            $operationIdRaw = $operation['operationId'] ?? null;
-            $operationId = is_string($operationIdRaw) ? $operationIdRaw : null;
+            $this->newLine();
+            $this->line("<fg={$color}>{$rule->name()} (".count($findings)."){$warningSuffix}:</>");
 
-            if ($operationId === null || $operationId === '') {
-                $routeIssues[] = 'missing operationId';
-            } elseif (($operationIdCounts[$operationId] ?? 0) > 1) {
-                $count = $operationIdCounts[$operationId];
-                $routeIssues[] = "duplicate operationId '{$operationId}' (used by {$count} operations)";
-            }
-
-            if ($this->routeHasSanctum($route['middleware'])) {
-                $responses = $operation['responses'] ?? [];
-                if (is_array($responses) && ! isset($responses['401']) && ! isset($responses[401])) {
-                    $routeIssues[] = 'auth:sanctum route missing 401 response';
-                }
-            }
-
-            if (! empty($routeIssues)) {
-                $issues[] = [
-                    'route' => strtoupper($route['method']).' /'.$route['uri'],
-                    'issues' => $routeIssues,
-                ];
+            foreach ($findings as $finding) {
+                $this->line("  <fg={$color}>{$finding->subject}:</> ".implode(', ', $finding->issues));
             }
         }
-
-        return $issues;
     }
 
     /**
-     * @param array<int, array{method: string, path: string, operation: array<string, mixed>}> $specPaths
-     * @return array<string, int>
+     * @param array<int, array{rule: AuditRule, findings: array<int, AuditFinding>}> $results
+     * @return array<int, array{string, string}>
      */
-    private function countOperationIds(array $specPaths): array
+    private function summaryRows(AuditContext $context, array $results): array
     {
-        $counts = [];
+        $rows = [
+            ['Routes audited', (string) count($context->routes)],
+            ['Spec paths', (string) count($context->specPaths)],
+        ];
 
-        foreach ($specPaths as $path) {
-            $operationIdRaw = $path['operation']['operationId'] ?? null;
+        foreach ($results as $result) {
+            $rule = $result['rule'];
+            $count = count($result['findings']);
+            $label = $rule->severity() === AuditSeverity::Warning && $count > 0
+                ? "{$count} warning(s)"
+                : (string) $count;
 
-            if (! is_string($operationIdRaw) || $operationIdRaw === '') {
-                continue;
-            }
-
-            $counts[$operationIdRaw] = ($counts[$operationIdRaw] ?? 0) + 1;
+            $rows[] = [$rule->name(), $label];
         }
 
-        return $counts;
-    }
-
-    /** @param string[] $middleware */
-    private function routeHasSanctum(array $middleware): bool
-    {
-        return (bool) array_filter(
-            $middleware,
-            fn (string $entry): bool => str_contains($entry, 'sanctum') || str_contains($entry, 'Authenticate')
-        );
-    }
-
-    /**
-     * Compares each OA\Schema-decorated DTO's constructor-promoted properties against its
-     * #[OA\Property] annotations by name only — not type or nullability. Catches a field
-     * renamed or added on a DTO without updating its OpenAPI annotation, which no other
-     * check in this command (or the rest of the pipeline) would notice.
-     *
-     * @return array<int, array{class: string, issues: string[]}>
-     */
-    private function findDtoSchemaDrift(string $dtoDir, string $dtoNamespace): array
-    {
-        $results = [];
-
-        foreach ($this->getSchemaDtoClasses($dtoDir, $dtoNamespace) as $reflection) {
-            $issues = $this->compareDtoPropertiesToSchema($reflection);
-
-            if (! empty($issues)) {
-                $results[] = [
-                    'class' => $reflection->getName(),
-                    'issues' => $issues,
-                ];
-            }
-        }
-
-        return $results;
-    }
-
-    /** @return array<int, ReflectionClass<Data>> */
-    private function getSchemaDtoClasses(string $dtoDir, string $dtoNamespace): array
-    {
-        $classes = [];
-
-        $finder = (new Finder)->files()->in($dtoDir)->path('Data')->name('*.php');
-
-        foreach ($finder as $file) {
-            $relative = str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
-            $class = rtrim($dtoNamespace, '\\').'\\'.$relative;
-
-            if (! class_exists($class)) {
-                continue;
-            }
-
-            $reflection = new ReflectionClass($class);
-
-            if (! $reflection->isSubclassOf(Data::class) || empty($reflection->getAttributes(OA\Schema::class))) {
-                continue;
-            }
-
-            $classes[] = $reflection;
-        }
-
-        return $classes;
-    }
-
-    /**
-     * @param ReflectionClass<Data> $reflection
-     * @return string[]
-     */
-    private function compareDtoPropertiesToSchema(ReflectionClass $reflection): array
-    {
-        $constructor = $reflection->getConstructor();
-
-        if ($constructor === null) {
-            return [];
-        }
-
-        $phpProperties = [];
-        foreach ($constructor->getParameters() as $parameter) {
-            $phpProperties[Str::snake($parameter->getName())] = $parameter->getName();
-        }
-
-        $annotatedProperties = $this->getAnnotatedPropertyNames($reflection, $constructor);
-
-        $issues = [];
-
-        foreach (array_diff_key($phpProperties, $annotatedProperties) as $snakeName => $phpName) {
-            $issues[] = "property \${$phpName} has no matching #[OA\\Property(property: '{$snakeName}')]";
-        }
-
-        foreach (array_diff_key($annotatedProperties, $phpProperties) as $snakeName => $original) {
-            $issues[] = "#[OA\\Property(property: '{$snakeName}')] has no matching constructor property";
-        }
-
-        return $issues;
-    }
-
-    /**
-     * @param ReflectionClass<Data> $reflection
-     * @return array<string, string> snake-cased property name => original annotated name
-     */
-    private function getAnnotatedPropertyNames(ReflectionClass $reflection, ReflectionMethod $constructor): array
-    {
-        $names = [];
-
-        foreach ($constructor->getParameters() as $parameter) {
-            foreach ($parameter->getAttributes(OA\Property::class) as $attribute) {
-                $property = $attribute->newInstance()->property;
-
-                $names[Str::snake($property)] = $property;
-            }
-        }
-
-        foreach ($reflection->getAttributes(OA\Schema::class) as $attribute) {
-            $properties = $attribute->newInstance()->properties;
-
-            // Vendor @var claims list<Property>, but the real runtime default when `properties:` is
-            // omitted is the Undefined::UNDEFINED sentinel string.
-            // @phpstan-ignore function.alreadyNarrowedType
-            if (! is_array($properties)) {
-                continue;
-            }
-
-            foreach ($properties as $property) {
-                $names[Str::snake($property->property)] = $property->property;
-            }
-        }
-
-        return $names;
-    }
-
-    /** @param array<int, array{method: string, uri: string, middleware: string[]}> $undocumented */
-    private function reportUndocumented(array $undocumented): void
-    {
-        if (empty($undocumented)) {
-            return;
-        }
-
-        $this->newLine();
-        $this->line('<fg=red>Undocumented routes ('.count($undocumented).'):</>');
-        $this->table(
-            ['Method', 'URI'],
-            array_map(fn (array $route): array => [strtoupper($route['method']), '/'.$route['uri']], $undocumented)
-        );
-    }
-
-    /** @param array<int, array{method: string, path: string, operation: array<string, mixed>}> $phantom */
-    private function reportPhantom(array $phantom): void
-    {
-        if (empty($phantom)) {
-            return;
-        }
-
-        $this->newLine();
-        $this->line('<fg=red>Phantom spec paths with no matching route ('.count($phantom).'):</>');
-        $this->table(
-            ['Method', 'Path'],
-            array_map(fn (array $path): array => [strtoupper($path['method']), '/'.$path['path']], $phantom)
-        );
-    }
-
-    /** @param array<int, array{class: string, issues: string[]}> $dtoSchemaDrift */
-    private function reportDtoSchemaDrift(array $dtoSchemaDrift): void
-    {
-        if (empty($dtoSchemaDrift)) {
-            return;
-        }
-
-        $this->newLine();
-        $this->line('<fg=red>DTO/schema drift ('.count($dtoSchemaDrift).'):</>');
-
-        foreach ($dtoSchemaDrift as $item) {
-            $this->line('  <fg=red>'.$item['class'].':</> '.implode(', ', $item['issues']));
-        }
-    }
-
-    /** @param array<int, array{method: string, uri: string, middleware: string[]}> $missingApiMiddleware */
-    private function reportMissingApiMiddleware(array $missingApiMiddleware): void
-    {
-        if (empty($missingApiMiddleware)) {
-            return;
-        }
-
-        $this->newLine();
-        $this->line('<fg=yellow>Routes missing api middleware ('.count($missingApiMiddleware).') — warnings:</>');
-        $this->table(
-            ['Method', 'URI'],
-            array_map(
-                fn (array $route): array => [strtoupper($route['method']), '/'.$route['uri']],
-                $missingApiMiddleware
-            )
-        );
-    }
-
-    /** @param array<int, array{route: string, issues: string[]}> $incomplete */
-    private function reportIncomplete(array $incomplete): void
-    {
-        if (empty($incomplete)) {
-            return;
-        }
-
-        $this->newLine();
-        $this->line('<fg=yellow>Incomplete annotations ('.count($incomplete).') — warnings:</>');
-
-        foreach ($incomplete as $item) {
-            $this->line('  <fg=yellow>'.$item['route'].':</> '.implode(', ', $item['issues']));
-        }
+        return $rows;
     }
 }
