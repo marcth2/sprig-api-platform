@@ -6,6 +6,7 @@ namespace App\HealthCheck\Data;
 
 use App\HealthCheck\Contracts\HealthCheckMetaData;
 use App\HealthCheck\Enums\ServiceState;
+use Illuminate\Http\Response;
 use OpenApi\Attributes as OA;
 use Spatie\LaravelData\Attributes\MapOutputName;
 use Spatie\LaravelData\Data;
@@ -45,7 +46,7 @@ class HealthStatusData extends Data
             property: 'status',
             type: 'integer',
             description: 'HTTP status code mirroring the response status (200 for ok, 503 for degraded or down).',
-            example: 200,
+            example: Response::HTTP_OK,
         )]
         public readonly int $status,
 
