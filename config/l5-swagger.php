@@ -8,16 +8,11 @@ return [
     'default' => 'default',
     'documentations' => [
         'default' => [
-            'api' => [
-                'title' => 'L5 Swagger UI',
-            ],
-
-            'routes' => [
-                /*
-                 * Route for accessing api documentation interface
-                 */
-                'api' => 'api/documentation',
-            ],
+            /*
+             * No 'routes.api' key on purpose: l5-swagger's own Swagger UI page is disabled, because
+             * the swaggerapi/swagger-ui container on :8081 is this project's only UI. Restoring the
+             * key re-registers a second, redundant UI at api/documentation. See docs/way-of-working.md.
+             */
             'paths' => [
                 /*
                  * Edit to include full URL in ui for assets
@@ -61,18 +56,20 @@ return [
             'docs' => 'docs',
 
             /*
-             * Route for Oauth2 authentication callback.
+             * No 'oauth2_callback' key on purpose: it only serves l5-swagger's own UI, which is
+             * disabled above. The spec's only security scheme is the sanctum bearer token in
+             * securityDefinitions, and :8081 uses its own bundled oauth2-redirect.html.
              */
-            'oauth2_callback' => 'api/oauth2-callback',
 
             /*
              * Middleware allows to prevent unexpected access to API documentation
+             *
+             * Only the two routes that remain registered: docs (the spec, fetched by :8081) and
+             * asset (registered unconditionally alongside docs by the package).
              */
             'middleware' => [
-                'api' => [],
                 'asset' => [],
                 'docs' => [],
-                'oauth2_callback' => [],
             ],
 
             /*
