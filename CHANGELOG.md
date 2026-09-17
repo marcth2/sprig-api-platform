@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   only documentation UI. Drops the `api/documentation` and `api/oauth2-callback` routes and the
   published `resources/views/vendor/l5-swagger/index.blade.php` (byte-identical to the package
   default). The `docs` route the container fetches is unchanged.
+  ([#195](https://github.com/marcth2/sprig-api-platform/pull/195))
 
 ## [0.2.0] - 2026-08-22
 
