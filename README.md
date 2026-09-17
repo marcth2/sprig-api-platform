@@ -73,6 +73,10 @@ The OpenAPI spec (`storage/api-docs/`) is gitignored and must be generated local
 docker compose exec app php artisan l5-swagger:generate
 ```
 
+The UI fetches the spec from the app at `http://localhost:8000/docs` each time the page
+loads, so a regenerate is visible on refresh — no `docker compose restart swagger-ui`.
+That cross-origin fetch is what `config/cors.php` allows.
+
 Endpoints require a Sanctum Bearer token — see the [HealthCheck README](app/HealthCheck/README.md#authentication) for instructions on generating one.
 
 ---
