@@ -87,10 +87,16 @@ services:
     image: swaggerapi/swagger-ui
     ports:
       - "8081:8080"
-    volumes:
-      - ./storage/api-docs:/usr/share/nginx/html/api-docs
     environment:
-      SWAGGER_JSON: /usr/share/nginx/html/api-docs/openapi.yaml
+      # Resolved by the browser on every page load, so the UI always renders the
+      # spec as it stands right now — no container restart after l5-swagger:generate.
+      #
+      # Do not go back to bind-mounting storage/api-docs and setting SWAGGER_JSON:
+      # that path is tested once, by the image's entrypoint, at container start. On
+      # a fresh clone storage/api-docs is empty (it is gitignored), the test fails,
+      # and the UI silently pins itself to the Petstore demo spec for the life of
+      # the container — generating the spec afterwards has no effect.
+      SWAGGER_JSON_URL: http://localhost:8000/docs
     networks:
       - laravel
 
